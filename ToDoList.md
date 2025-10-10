@@ -12,7 +12,7 @@ This to-do list is generated from the `Tasklist.csv` and tracks the development 
 
 ### Epic: Rules
 - [x] **Task:** Implement SRS rotation and wall kicks (`rules.ts`)
-- [ ] **Task:** Implement scoring logic (`rules.ts`)
+- [x] **Task:** Implement scoring logic (`rules.ts`)
 
 ### Epic: PRNG/Bag
 - [x] **Task:** Seedable integer-only PRNG (`rng.ts`)

@@ -2,6 +2,17 @@
 
 This file tracks the build and development process.
 
+**Commit: `ea07e22`**
+*   **Date:** 2025-10-10
+*   **Author:** Gemini
+*   **Summary:** `feat(engine): Implement line clearing and scoring logic`
+*   **Details:**
+    *   Aligned core data structures (`types.ts`) and engine snapshots with the refined project specification.
+    *   Implemented line clearing and scoring logic in the engine.
+    *   Added a unit test to verify the new gameplay mechanics.
+    *   Scaffolded `worker.ts` and `recover.ts` for Phase 2.
+    *   All tests are passing, marking the completion of Phase 1.
+
 **Commit: `[Will be generated]`**
 *   **Date:** 2025-10-10
 *   **Author:** Gemini
