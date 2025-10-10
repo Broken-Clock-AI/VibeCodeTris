@@ -1,0 +1,67 @@
+# Project To-Do List
+
+This to-do list is generated from the `Tasklist.csv` and tracks the development plan.
+
+## Phase 1: The Deterministic Core Engine
+
+### Epic: Engine Core
+- [ ] **Task:** Implement deterministic engine tick loop (`engine.ts`)
+- [ ] **Task:** Implement piece spawn logic (`engine.ts`)
+- [ ] **Task:** Implement lock and merge logic (`engine.ts`)
+- [ ] **Task:** Integrate PRNG/bag (`engine.ts`)
+
+### Epic: Rules
+- [ ] **Task:** Implement SRS rotation and wall kicks (`rules.ts`)
+- [ ] **Task:** Implement scoring logic (`rules.ts`)
+
+### Epic: PRNG/Bag
+- [ ] **Task:** Seedable integer-only PRNG (`rng.ts`)
+
+### Epic: Constants
+- [ ] **Task:** Define config and defaults (`constants.ts`)
+
+### Epic: Tests (Phase 1)
+- [ ] **Task:** Unit tests for engine core (`/tests/unit`)
+
+## Phase 2: The Worker & Communication Layer
+
+### Epic: Worker
+- [ ] **Task:** Implement message routing (`worker.ts`)
+- [ ] **Task:** Implement recover handler (`worker.ts`)
+
+### Epic: Recover
+- [ ] **Task:** Implement snapshot validation (`recover.ts`)
+- [ ] **Task:** Implement snapshot bootstrap (`recover.ts`)
+
+### Epic: Tests (Phase 2)
+- [ ] **Task:** Integration/golden tests for crash/recover (`/tests/integration`)
+
+## Phase 3: The Renderer & User Interface
+
+### Epic: Renderer
+- [ ] **Task:** Implement MVP PixiJS renderer (`pixiRenderer.ts`)
+
+### Epic: Renderer Adapter
+- [ ] **Task:** Implement snapshot subscription (`renderAPI.ts`)
+
+### Epic: UI
+- [ ] **Task:** Implement keyboard controls (`controls.tsx`)
+- [ ] **Task:** Implement touch controls (`controls.tsx`)
+
+### Epic: Accessibility
+- [ ] **Task:** Implement HUD for screen readers (`accessibility.ts`)
+
+## Phase 4: Verification, Tooling & Polish
+
+### Epic: Replay Tool
+- [ ] **Task:** Implement replay player (`replayPlayer.ts`)
+
+### Epic: Tests (Phase 4)
+- [ ] **Task:** Integration/golden tests for replay (`/tests/integration`)
+
+## Post-MVP (Optional)
+
+### Epic: Optional
+- [ ] **Task:** Visualizer shaders and bloom (`shaders/`)
+- [ ] **Task:** Particles and advanced events (Renderer)
+- [ ] **Task:** Audio sync and WebAudio (Renderer)
