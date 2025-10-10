@@ -1,6 +1,6 @@
 import { COLS, DAS, GRAVITY_START_DELAY, LOCK_DELAY, ROWS } from './constants';
 import { PRNG } from './rng';
-import { isValidPosition, rotateMatrix } from './rules';
+import { calculateScore, isValidPosition, rotateMatrix } from './rules';
 import { GameEvent, Snapshot } from './types';
 
 // --- Piece Definitions ---
@@ -86,10 +86,98 @@ export class TetrisEngine {
     if (!this.currentPiece) {
         this.spawnPiece();
     }
+
+    // --- Gravity ---
+    if (this.currentPiece) {
+        this.gravityCounter++;
+        // TODO: Replace with dynamic gravity based on level
+        const currentGravity = GRAVITY_START_DELAY; 
+
+        if (this.gravityCounter >= currentGravity) {
+            this.gravityCounter = 0;
+            
+            const newY = this.currentPiece.y + 1;
+            if (isValidPosition(this.currentPiece.matrix, this.currentPiece.x, newY, this.board)) {
+                this.currentPiece.y = newY;
+            } else {
+                // Piece has landed, handle locking
+                this.lockPiece();
+            }
+        }
+    }
     
     // ... game logic will go here ...
 
     return this.createSnapshot();
+  }
+
+  /**
+   * Locks the current piece to the board and spawns a new one.
+   */
+  private lockPiece(): void {
+    if (!this.currentPiece) return;
+
+    // Add piece to board
+    for (let r = 0; r < this.currentPiece.matrix.length; r++) {
+        for (let c = 0; c < this.currentPiece.matrix[r].length; c++) {
+            if (this.currentPiece.matrix[r][c]) {
+                const boardX = this.currentPiece.x + c;
+                const boardY = this.currentPiece.y + r;
+                this.board[boardY * COLS + boardX] = PIECE_TYPES.indexOf(this.currentPiece.type) + 1;
+            }
+        }
+    }
+
+    // --- Line Clearing & Scoring ---
+    let linesCleared = 0;
+    const clearedRows: number[] = [];
+    for (let r = ROWS - 1; r >= 0; r--) {
+        const isLineFull = ![...this.board.slice(r * COLS, (r + 1) * COLS)].includes(0);
+        if (isLineFull) {
+            linesCleared++;
+            clearedRows.push(r);
+            // Shift all rows above down
+            for (let y = r; y > 0; y--) {
+                for (let x = 0; x < COLS; x++) {
+                    this.board[y * COLS + x] = this.board[(y - 1) * COLS + x];
+                }
+            }
+            // Clear the top row
+            for (let x = 0; x < COLS; x++) {
+                this.board[x] = 0;
+            }
+            // Since we shifted down, we need to check the same row again
+            r++; 
+        }
+    }
+
+    if (linesCleared > 0) {
+        this.combo++;
+        // TODO: T-Spin detection
+        const isTSpin = false; 
+        const isBackToBack = this.backToBack > 0 && (linesCleared === 4 || isTSpin);
+        
+        const scoreGained = calculateScore(linesCleared, this.level, isTSpin, isBackToBack);
+        this.score += scoreGained;
+        this.lines += linesCleared;
+        this.level = Math.floor(this.lines / 10) + 1;
+
+        this.events.push({ type: 'lineClear', tick: this.tickCounter, data: { rows: clearedRows, count: linesCleared } });
+        this.events.push({ type: 'scoreUpdate', tick: this.tickCounter, data: { score: this.score, lines: this.lines, level: this.level } });
+
+        if (linesCleared === 4 || isTSpin) {
+            this.backToBack++;
+        } else {
+            this.backToBack = 0;
+        }
+    } else {
+        this.combo = 0;
+    }
+
+    // Reset for next piece
+    this.currentPiece = null;
+    this.lockCounter = 0;
+    this.spawnPiece();
   }
 
   /**
@@ -144,7 +232,11 @@ export class TetrisEngine {
    * Creates a snapshot of the current game state.
    */
   private createSnapshot(): Snapshot {
-    // TODO: This needs a proper implementation for PRNG state, checksum, etc.
+    const bagUint8 = new Uint8Array(this.bag.length);
+    for (let i = 0; i < this.bag.length; i++) {
+        bagUint8[i] = PIECE_TYPES.indexOf(this.bag[i]) + 1;
+    }
+
     return {
         protocolVersion: 1,
         engineVersion: "0.1.0",
@@ -153,8 +245,8 @@ export class TetrisEngine {
         tick: this.tickCounter,
         authoritativeTimeMs: this.tickCounter * (1000 / 60), // Assuming 60 TPS for now
         
-        prngState: new Uint32Array(), // Placeholder
-        bagState: { bag: new Uint8Array(), index: 0 }, // Placeholder
+        prngState: new Uint32Array([this.prng.getState()]),
+        bagState: { bag: bagUint8, index: 0 }, // Index is 0 as we shift from the bag
 
         inputQueueCursor: 0, // Placeholder
         lockCounter: this.lockCounter,

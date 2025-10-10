@@ -3,9 +3,10 @@
 /**
  * Represents a complete, authoritative snapshot of the game state at a specific tick.
  * This object is designed to be compact and easily serializable for communication
- * between the worker and the main thread.
+ * between the worker and the main thread, and for saving replays.
  */
 export type Snapshot = {
+  // --- Metadata ---
   protocolVersion: number;
   engineVersion: string;
   snapshotSchemaVersion: number;

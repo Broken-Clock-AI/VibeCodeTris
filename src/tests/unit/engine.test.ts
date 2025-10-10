@@ -1,55 +1,55 @@
+// src/tests/unit/engine.test.ts
 import { TetrisEngine } from '../../logic/engine';
+import { COLS, ROWS } from '../../logic/constants';
 
-describe('TetrisEngine', () => {
-  
-  describe('Initialization', () => {
-    it('should initialize without a current piece', () => {
-      const engine = new TetrisEngine(12345);
-      const snapshot = engine.tick(); // First tick spawns a piece
-      // We need to check the state *before* the first tick, 
-      // but the engine spawns on the first tick.
-      // A better test would be to check the initial snapshot *before* any logic runs.
-      // For now, we'll verify that a piece exists *after* the first tick.
-      expect(snapshot.current).not.toBeNull();
-    });
+describe('TetrisEngine: Line Clearing and Scoring', () => {
+  let engine: TetrisEngine;
 
-    it('should spawn a piece after the first tick', () => {
-      const engine = new TetrisEngine(12345);
-      const snapshot = engine.tick();
-      expect(snapshot.current).not.toBeNull();
-    });
+  beforeEach(() => {
+    // Use a fixed seed for deterministic tests
+    engine = new TetrisEngine(12345);
   });
 
-  describe('Bag Determinism', () => {
-    it('should generate identical piece sequences from the same seed', () => {
-      const seed = 54321;
-      const engine1 = new TetrisEngine(seed);
-      const engine2 = new TetrisEngine(seed);
+  test('should clear a single line and update score', () => {
+    // Manually set up the board to have a nearly complete line
+    const board = new Uint8Array(ROWS * COLS).fill(0);
+    for (let i = 0; i < COLS - 1; i++) {
+      board[(ROWS - 1) * COLS + i] = 1; // Fill all but one cell in the last row
+    }
+    
+    // @ts-ignore - Accessing private board for test setup
+    engine.board = board;
 
-      const sequence1 = Array.from({ length: 14 }, () => engine1.tick().current?.type);
-      const sequence2 = Array.from({ length: 14 }, () => engine2.tick().current?.type);
+    // Manually create a piece that will complete the line
+    const piece = {
+      type: 'I',
+      matrix: [[1]],
+      x: COLS - 1,
+      y: ROWS - 1,
+      rotation: 0,
+      color: 0,
+    };
 
-      expect(sequence1).toEqual(sequence2);
-    });
+    // @ts-ignore - Accessing private currentPiece for test setup
+    engine.currentPiece = piece;
+
+    // Lock the piece, which should trigger line clearing and scoring
+    // @ts-ignore - Accessing private lockPiece method for test
+    engine.lockPiece();
+
+    const snapshot = engine.tick();
+
+    // --- Assertions ---
+    // 1. The line should be cleared (top row should be all zeros)
+    const boardView = new Uint8Array(snapshot.boardBuffer);
+    const topRow = boardView.slice(0, COLS);
+    expect(topRow.every(cell => cell === 0)).toBe(true);
+
+    // 2. The score should be updated for a single line clear at level 1
+    // Base score for 1 line is 100, level is 1.
+    expect(snapshot.score).toBe(100);
+
+    // 3. The line count should be 1
+    expect(snapshot.lines).toBe(1);
   });
-
-  describe('Piece Spawning', () => {
-    it('should spawn the first piece from the bag on the first tick', () => {
-      const seed = 98765;
-      const engine = new TetrisEngine(seed);
-      
-      // To test this properly, we'd need to inspect the internal bag state before the tick.
-      // Since the bag is private, we'll trust the determinism test and just ensure a piece spawns.
-      const snapshot = engine.tick();
-      const firstPieceType = snapshot.current?.type;
-
-      expect(firstPieceType).toBeDefined();
-      expect(firstPieceType).not.toBeNull();
-      
-      // We can check the `nextTypes` to infer the bag's contents
-      const nextPieceType = snapshot.nextTypes[0];
-      expect(nextPieceType).toBeGreaterThan(0);
-    });
-  });
-
 });

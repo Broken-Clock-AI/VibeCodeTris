@@ -5,9 +5,9 @@ This to-do list is generated from the `Tasklist.csv` and tracks the development 
 ## Phase 1: The Deterministic Core Engine
 
 ### Epic: Engine Core
-- [ ] **Task:** Implement deterministic engine tick loop (`engine.ts`)
+- [x] **Task:** Implement deterministic engine tick loop (`engine.ts`)
 - [x] **Task:** Implement piece spawn logic (`engine.ts`)
-- [ ] **Task:** Implement lock and merge logic (`engine.ts`)
+- [x] **Task:** Implement lock and merge logic (`engine.ts`)
 - [x] **Task:** Integrate PRNG/bag (`engine.ts`)
 
 ### Epic: Rules

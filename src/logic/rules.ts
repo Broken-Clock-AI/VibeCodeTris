@@ -1,3 +1,5 @@
+// src/logic/rules.ts
+
 import { COLS, ROWS } from './constants';
 import { Snapshot } from './types';
 
@@ -46,7 +48,7 @@ const WALL_KICK_DATA_I = [
  * @param matrix The piece's current rotation matrix.
  * @param x The x-coordinate of the piece.
  * @param y The y-coordinate of the piece.
- * @param board The game board.
+ * @param board The game board state.
  * @returns True if the position is valid, false otherwise.
  */
 export function isValidPosition(matrix: number[][], x: number, y: number, board: Uint8Array): boolean {
@@ -55,12 +57,14 @@ export function isValidPosition(matrix: number[][], x: number, y: number, board:
       if (matrix[row][col]) {
         const boardX = x + col;
         const boardY = y + row;
-        if (
-          boardX < 0 ||
-          boardX >= COLS ||
-          boardY >= ROWS ||
-          (boardY >= 0 && board[boardY * COLS + boardX])
-        ) {
+
+        // Check bounds first
+        if (boardX < 0 || boardX >= COLS || boardY >= ROWS) {
+          return false;
+        }
+
+        // Then check for collision with existing pieces, but only for valid board coordinates
+        if (boardY >= 0 && board[boardY * COLS + boardX]) {
           return false;
         }
       }
@@ -91,4 +95,43 @@ export function rotateMatrix(matrix: number[][], direction: number): number[][] 
     return result;
 }
 
-// More functions for scoring, line clearing, etc. will be added here.
+/**
+ * Calculates the score for a given move.
+ * @param linesCleared The number of lines cleared.
+ * @param level The current game level.
+ * @param isTSpin Whether the move was a T-Spin.
+ * @param isBackToBack Whether the move qualifies for a back-to-back bonus.
+ * @returns The score awarded for the move.
+ */
+export function calculateScore(
+    linesCleared: number,
+    level: number,
+    isTSpin: boolean = false,
+    isBackToBack: boolean = false
+): number {
+    let baseScore = 0;
+
+    if (isTSpin) {
+        switch (linesCleared) {
+            case 0: baseScore = 400; break; // T-Spin Mini
+            case 1: baseScore = 800; break; // T-Spin Single
+            case 2: baseScore = 1200; break; // T-Spin Double
+            case 3: baseScore = 1600; break; // T-Spin Triple
+        }
+    } else {
+        switch (linesCleared) {
+            case 1: baseScore = 100; break; // Single
+            case 2: baseScore = 300; break; // Double
+            case 3: baseScore = 500; break; // Triple
+            case 4: baseScore = 800; break; // Tetris
+        }
+    }
+
+    let score = baseScore * level;
+
+    if (isBackToBack && (linesCleared === 4 || isTSpin)) {
+        score *= 1.5;
+    }
+
+    return Math.floor(score);
+}

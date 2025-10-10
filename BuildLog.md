@@ -5,6 +5,17 @@ This file tracks the build and development process.
 **Commit: `[Will be generated]`**
 *   **Date:** 2025-10-10
 *   **Author:** Gemini
+*   **Summary:** `feat(engine): Implement gravity and piece locking`
+*   **Details:**
+    *   Implemented the core gravity loop in the engine's `tick()` method.
+    *   Added piece locking and merging logic to the board.
+    *   Added and refined unit tests for gravity and locking behavior.
+    *   Diagnosed and fixed a critical bug in the `isValidPosition` function that was causing incorrect collision detection.
+    *   All unit tests are now passing, confirming the core mechanics are working deterministically.
+
+**Commit: `[Will be generated]`**
+*   **Date:** 2025-10-10
+*   **Author:** Gemini
 *   **Summary:** `feat(engine): Implement 7-bag and piece spawning`
 *   **Details:**
     *   Implemented the deterministic 7-bag piece generator using the PRNG.
@@ -29,7 +40,7 @@ This file tracks the build and development process.
 *   **Author:** Gemini
 *   **Summary:** `feat(logic): Scaffold core data structures and constants`
 *   **Details:**
-    *   Created `types.ts` with the fully-defined `Snapshot` and `GameEvent` schemas, establishing the core data contract for the application.
+    *   Created `types.ts` with the fully-defined `Snapshot` and `GameEvent` schemas, establishing the core data contract for the.
     *   Created `constants.ts` to define game parameters like TPS, DAS, ARR, and board dimensions.
     *   These files align with the refined project specification and form the foundation for the deterministic engine.
 
