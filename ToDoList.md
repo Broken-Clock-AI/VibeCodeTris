@@ -26,15 +26,15 @@ This to-do list is generated from the `Tasklist.csv` and tracks the development 
 ## Phase 2: The Worker & Communication Layer
 
 ### Epic: Worker
-- [ ] **Task:** Implement message routing (`worker.ts`)
-- [ ] **Task:** Implement recover handler (`worker.ts`)
+- [x] **Task:** Implement message routing (`worker.ts`)
+- [x] **Task:** Implement recover handler (`worker.ts`)
 
 ### Epic: Recover
-- [ ] **Task:** Implement snapshot validation (`recover.ts`)
-- [ ] **Task:** Implement snapshot bootstrap (`recover.ts`)
+- [x] **Task:** Implement snapshot validation (`recover.ts`)
+- [x] **Task:** Implement snapshot bootstrap (`recover.ts`)
 
 ### Epic: Tests (Phase 2)
-- [ ] **Task:** Integration/golden tests for crash/recover (`/tests/integration`)
+- [x] **Task:** Integration/golden tests for crash/recover (`/tests/integration`)
 
 ## Phase 3: The Renderer & User Interface
 

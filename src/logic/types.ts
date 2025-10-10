@@ -1,36 +1,50 @@
-// --- Core Data Structures ---
+// src/logic/types.ts
 
 /**
- * Represents a complete, authoritative snapshot of the game state at a specific tick.
- * This object is designed to be compact and easily serializable for communication
- * between the worker and the main thread, and for saving replays.
+ * Represents a single, atomic event that occurred within the game engine
+ * at a specific tick.
+ */
+export type GameEvent = {
+  type: 'lineClear' | 'tSpin' | 'backToBack' | 'combo' | 'spawn' | 'lock' | 'hold' | 'gameOver' | 'scoreUpdate';
+  tick: number;
+  data?: any;
+};
+
+/**
+ * Represents a user input action to be processed by the engine.
+ */
+export type GameInput = {
+    tick: number;
+    action: 'moveLeft' | 'moveRight' | 'softDrop' | 'hardDrop' | 'rotateCW' | 'rotateCCW' | 'hold';
+    source?: 'keyboard' | 'touch' | 'replay';
+};
+
+/**
+ * A complete, self-contained snapshot of the entire game state at a
+ * specific moment in time. Designed for replay, recovery, and rendering.
  */
 export type Snapshot = {
   // --- Metadata ---
   protocolVersion: number;
   engineVersion: string;
   snapshotSchemaVersion: number;
-  snapshotId: number;           // Monotonically increasing ID for each snapshot
-  tick: number;                 // The authoritative game tick
-  authoritativeTimeMs: number;  // The calculated time (tick / TPS)
-  
+  snapshotId: number;
+  tick: number;
+  authoritativeTimeMs: number;
+
   // --- Deterministic State ---
-  prngState: Uint32Array;       // The state of the deterministic PRNG
-  bagState: { bag: Uint8Array, index: number }; // The state of the 7-bag piece generator
-  
-  // --- Input and Timing State ---
-  inputQueueCursor: number;     // Cursor for processing the input queue
-  lockCounter: number;          // Ticks remaining before a piece locks
-  gravityCounter: number;       // Ticks remaining before gravity applies
-  
-  // --- Gameplay State ---
-  backToBack: number;           // Back-to-back bonus counter
-  combo: number;                // Combo counter
-  
-  // --- Board and Piece State ---
+  prngState: Uint32Array;
+  bagState: { bag: Uint8Array; index: number };
+  inputQueueCursor: number;
+
+  // --- Game State ---
+  lockCounter: number;
+  gravityCounter: number;
+  backToBack: number;
+  combo: number;
   rows: number;
   cols: number;
-  boardBuffer: ArrayBuffer;     // The main game board (transferable)
+  boardBuffer: ArrayBuffer;
   current: {
     type: string;
     matrix: Uint8Array;
@@ -39,27 +53,14 @@ export type Snapshot = {
     rotation: number;
     color: number;
   } | null;
-  nextTypes: Uint8Array;        // The upcoming pieces in the queue
-  holdType: number;             // The piece type in the hold slot (0 for none)
-  
-  // --- Scoring State ---
+  nextTypes: Uint8Array;
+  holdType: number;
   score: number;
   level: number;
   lines: number;
-  
-  // --- Ephemeral Data ---
-  events: GameEvent[];          // A list of events that occurred on this tick
-  
-  // --- Integrity ---
-  checksum: number;             // A checksum (e.g., xxhash32) to verify integrity
+
+  // --- Ephemeral State ---
+  events: GameEvent[];
+  checksum: number;
 };
 
-/**
- * Represents a discrete event that occurred during a game tick.
- * Used by the renderer to trigger animations, sounds, and other effects.
- */
-export type GameEvent = {
-  type: 'spawn' | 'lock' | 'lineClear' | 'tSpin' | 'backToBack' | 'combo' | 'hold' | 'gameOver' | 'particleEmit' | 'scoreUpdate';
-  tick: number;
-  data?: any; // Optional payload with event-specific data (e.g., { rows: [18, 19], clearType: 'double' })
-};

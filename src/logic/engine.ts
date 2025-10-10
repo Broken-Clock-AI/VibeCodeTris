@@ -1,7 +1,8 @@
-import { COLS, DAS, GRAVITY_START_DELAY, LOCK_DELAY, ROWS } from './constants';
+import { COLS, DAS, GRAVITY_START_DELAY, LOCK_DELAY, ROWS, CURRENT_ENGINE_VERSION, PROTOCOL_VERSION, SNAPSHOT_SCHEMA_VERSION } from './constants';
 import { PRNG } from './rng';
 import { calculateScore, isValidPosition, rotateMatrix } from './rules';
 import { GameEvent, Snapshot } from './types';
+import { calculateChecksum } from './recover';
 
 // --- Piece Definitions ---
 const PIECE_TYPES = 'IJLOSTZ';
@@ -79,7 +80,7 @@ export class TetrisEngine {
   /**
    * The main deterministic game loop.
    */
-  public tick(input?: any): Snapshot {
+  public tick(): Snapshot {
     this.tickCounter++;
     this.events = []; // Clear events for the new tick
 
@@ -109,6 +110,53 @@ export class TetrisEngine {
     // ... game logic will go here ...
 
     return this.createSnapshot();
+  }
+
+  /**
+   * Processes a user input action.
+   * @param action The input action to process (e.g., 'moveLeft', 'rotateCW').
+   */
+  public handleInput(action: string): void {
+    if (!this.currentPiece) return;
+
+    let { x, y, matrix } = this.currentPiece;
+
+    switch (action) {
+        case 'moveLeft':
+            x--;
+            break;
+        case 'moveRight':
+            x++;
+            break;
+        case 'softDrop':
+            y++;
+            break;
+        case 'hardDrop':
+            // This will be handled by finding the final position and locking instantly
+            while (isValidPosition(matrix, x, y + 1, this.board)) {
+                y++;
+            }
+            this.currentPiece.y = y;
+            this.lockPiece();
+            return; // Exit early as lockPiece is called
+        case 'rotateCW':
+            matrix = rotateMatrix(matrix, 1);
+            // TODO: Add wall kick logic here
+            break;
+        case 'rotateCCW':
+            matrix = rotateMatrix(matrix, -1);
+            // TODO: Add wall kick logic here
+            break;
+        case 'hold':
+            // TODO: Implement hold logic
+            break;
+    }
+
+    if (isValidPosition(matrix, x, y, this.board)) {
+        this.currentPiece.x = x;
+        this.currentPiece.y = y;
+        this.currentPiece.matrix = matrix;
+    }
   }
 
   /**
@@ -237,10 +285,10 @@ export class TetrisEngine {
         bagUint8[i] = PIECE_TYPES.indexOf(this.bag[i]) + 1;
     }
 
-    return {
-        protocolVersion: 1,
-        engineVersion: "0.1.0",
-        snapshotSchemaVersion: 1,
+    const snapshotData: Omit<Snapshot, 'checksum'> = {
+        protocolVersion: PROTOCOL_VERSION,
+        engineVersion: CURRENT_ENGINE_VERSION,
+        snapshotSchemaVersion: SNAPSHOT_SCHEMA_VERSION,
         snapshotId: this.tickCounter,
         tick: this.tickCounter,
         authoritativeTimeMs: this.tickCounter * (1000 / 60), // Assuming 60 TPS for now
@@ -257,7 +305,7 @@ export class TetrisEngine {
 
         rows: ROWS,
         cols: COLS,
-        boardBuffer: this.board.buffer,
+        boardBuffer: this.board.buffer.slice(0) as ArrayBuffer, // Create a copy for checksum calculation
         
         current: this.currentPiece ? {
             ...this.currentPiece,
@@ -272,7 +320,15 @@ export class TetrisEngine {
         lines: this.lines,
 
         events: this.events,
-        checksum: 0, // Placeholder
+    };
+
+    const checksum = calculateChecksum(snapshotData);
+    
+    // Return the full snapshot, including the board buffer that was copied.
+    return {
+        ...snapshotData,
+        boardBuffer: this.board.buffer as ArrayBuffer, // Return the original buffer for transferring
+        checksum,
     };
   }
 }

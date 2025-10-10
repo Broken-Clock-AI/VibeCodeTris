@@ -2,6 +2,18 @@
 
 This file tracks the build and development process.
 
+**Commit: `[Will be generated]`**
+*   **Date:** 2025-10-10
+*   **Author:** Gemini
+*   **Summary:** `feat(worker): Implement resilient worker and communication layer`
+*   **Details:**
+    *   Implemented a fully isomorphic message router in `worker.ts` to handle the engine lifecycle, user input, and crash recovery.
+    *   Added robust snapshot validation in `recover.ts`, including checksum and version checks, to ensure data integrity.
+    *   Updated the `TetrisEngine` to produce verifiable snapshots with checksums and to handle user input.
+    *   Created a suite of integration tests (`worker.test.ts`) to verify the entire worker lifecycle, including start, recovery, and message sequencing.
+    *   Fixed all related TypeScript and logic bugs, resulting in all 13 tests passing.
+    *   This commit completes Phase 2 of the project plan.
+
 **Commit: `ea07e22`**
 *   **Date:** 2025-10-10
 *   **Author:** Gemini

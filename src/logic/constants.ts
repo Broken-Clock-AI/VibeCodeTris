@@ -1,21 +1,17 @@
-// Game Timing and Ticks
-export const TPS = 60; // Ticks Per Second
-export const TICK_MS = 1000 / TPS;
+// src/logic/constants.ts
 
-// Input Handling
-export const DAS = 10; // Delayed Auto Shift in ticks
-export const ARR = 1;  // Auto Repeat Rate in ticks
-export const ALLOWED_LATE_WINDOW = 1; // How many ticks late an input can be
-
-// Board Dimensions
-export const ROWS = 20;
+// --- Core Gameplay ---
 export const COLS = 10;
+export const ROWS = 20;
+export const TICK_MS = 1000 / 60; // 60 ticks per second
 
-// Gameplay Mechanics
+// --- Timing (in Ticks) ---
+export const DAS = 10; // Delayed Auto Shift
+export const ARR = 1;  // Auto Repeat Rate
+export const LOCK_DELAY = 30; // Ticks before a piece locks down
 export const GRAVITY_START_DELAY = 60; // Ticks before gravity starts
-export const LOCK_DELAY = 30; // Ticks a piece can rest on a surface before locking
 
-// Feature Flags
-export const ENABLE_VISUALIZER = false;
-export const ENABLE_PARTICLES = false;
-export const ENABLE_AUDIO_SYNC = false;
+// --- Versioning ---
+export const PROTOCOL_VERSION = 1;
+export const CURRENT_ENGINE_VERSION = "0.1.0";
+export const SNAPSHOT_SCHEMA_VERSION = 1;
