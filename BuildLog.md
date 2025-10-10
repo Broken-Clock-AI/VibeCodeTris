@@ -1,3 +1,48 @@
 # Build Log
 
-This file will track the build and development process.
+This file tracks the build and development process.
+
+**Commit: `[Will be generated]`**
+*   **Date:** 2025-10-10
+*   **Author:** Gemini
+*   **Summary:** `feat(engine): Implement 7-bag and piece spawning`
+*   **Details:**
+    *   Implemented the deterministic 7-bag piece generator using the PRNG.
+    *   Added piece spawning logic to the engine.
+    *   Refactored the engine to spawn the first piece on the first tick, not in the constructor.
+    *   Added and updated unit tests to verify the bag's determinism and correct piece spawning.
+    *   All tests passed successfully.
+
+**Commit: `cbd6bfa`**
+*   **Date:** 2025-10-10
+*   **Author:** Gemini
+*   **Summary:** `feat(logic): Implement Phase 1 core logic and tests`
+*   **Details:**
+    *   Added initial implementations for `rng.ts`, `rules.ts`, and `engine.ts`.
+    *   Created unit tests for each of the core logic modules.
+    *   Set up the TypeScript environment with `ts-node` and a `tsconfig.json`.
+    *   Fixed a bug in the rotation test and verified all tests pass.
+    *   This commit completes the initial scaffolding of the deterministic core engine as outlined in Phase 1 of the project plan.
+
+**Commit: `72a2561`**
+*   **Date:** 2025-10-10
+*   **Author:** Gemini
+*   **Summary:** `feat(logic): Scaffold core data structures and constants`
+*   **Details:**
+    *   Created `types.ts` with the fully-defined `Snapshot` and `GameEvent` schemas, establishing the core data contract for the application.
+    *   Created `constants.ts` to define game parameters like TPS, DAS, ARR, and board dimensions.
+    *   These files align with the refined project specification and form the foundation for the deterministic engine.
+
+**Commit: `6ee6387`**
+*   **Date:** 2025-10-10
+*   **Author:** Guy Incognito
+*   **Summary:** `feat(project): Create build logs and archive superseded documents`
+*   **Details:**
+    *   Initial project setup.
+
+**Commit: `fd5a8d1`**
+*   **Date:** 2025-10-10
+*   **Author:** Guy Incognito
+*   **Summary:** `Initial commit: Project kickoff and planning documents`
+*   **Details:**
+    *   Initial commit of project planning documents.

@@ -6,22 +6,22 @@ This to-do list is generated from the `Tasklist.csv` and tracks the development 
 
 ### Epic: Engine Core
 - [ ] **Task:** Implement deterministic engine tick loop (`engine.ts`)
-- [ ] **Task:** Implement piece spawn logic (`engine.ts`)
+- [x] **Task:** Implement piece spawn logic (`engine.ts`)
 - [ ] **Task:** Implement lock and merge logic (`engine.ts`)
-- [ ] **Task:** Integrate PRNG/bag (`engine.ts`)
+- [x] **Task:** Integrate PRNG/bag (`engine.ts`)
 
 ### Epic: Rules
-- [ ] **Task:** Implement SRS rotation and wall kicks (`rules.ts`)
+- [x] **Task:** Implement SRS rotation and wall kicks (`rules.ts`)
 - [ ] **Task:** Implement scoring logic (`rules.ts`)
 
 ### Epic: PRNG/Bag
-- [ ] **Task:** Seedable integer-only PRNG (`rng.ts`)
+- [x] **Task:** Seedable integer-only PRNG (`rng.ts`)
 
 ### Epic: Constants
-- [ ] **Task:** Define config and defaults (`constants.ts`)
+- [x] **Task:** Define config and defaults (`constants.ts`)
 
 ### Epic: Tests (Phase 1)
-- [ ] **Task:** Unit tests for engine core (`/tests/unit`)
+- [x] **Task:** Unit tests for engine core (`/tests/unit`)
 
 ## Phase 2: The Worker & Communication Layer
 
