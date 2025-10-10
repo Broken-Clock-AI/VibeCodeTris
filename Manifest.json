@@ -1,0 +1,144 @@
+{
+  "tasks": [
+    {
+      "csvTask": "Implement deterministic engine tick loop",
+      "deliverable": "engine.ts",
+      "dependencies": [],
+      "functionSignatures": [
+        "tick(inputQueue: Input[], deltaTicks: number): Snapshot",
+        "serializeState(): Uint8Array",
+        "deserializeState(data: Uint8Array): void"
+      ],
+      "stubGoldenSnapshot": {
+        "protocolVersion": 1,
+        "engineVersion": "1.0.0",
+        "snapshotSchemaVersion": 1,
+        "snapshotId": 0,
+        "tick": 0,
+        "authoritativeTimeMs": 0,
+        "prngState": [123456789],
+        "bagState": { "bag": [0,1,2,3,4,5,6], "index": 0 },
+        "inputQueueCursor": 0,
+        "lockCounter": 0,
+        "gravityCounter": 0,
+        "backToBack": 0,
+        "combo": 0,
+        "rows": 20,
+        "cols": 10,
+        "boardBuffer": "empty-ArrayBuffer-200bytes",
+        "current": null,
+        "nextTypes": [0,1,2],
+        "holdType": 0,
+        "score": 0,
+        "level": 0,
+        "lines": 0,
+        "events": [],
+        "checksum": 0
+      },
+      "edgeCases": [
+        { "scenario": "hardDropDuringLock", "input": "hardDrop", "tick": 5, "expectedEvent": "lock", "expectedBoardChange": true },
+        { "scenario": "rotateIntoWall", "input": "rotateCW", "tick": 7, "expectedEvent": "spawn", "expectedBoardChange": false },
+        { "scenario": "DASRepeat", "input": "moveRightHeld", "tick": 10, "expectedPosition": 5 }
+      ]
+    },
+    {
+      "csvTask": "Implement piece spawn logic",
+      "deliverable": "engine.ts",
+      "dependencies": ["Implement deterministic engine tick loop"],
+      "functionSignatures": ["spawnPiece(): void"],
+      "stubGoldenSnapshot": {
+        "current": { "type":"I", "matrix":"4x4 array", "x":3, "y":0, "rotation":0, "color":1 }
+      },
+      "edgeCases": [
+        { "scenario": "spawnOccupied", "input": null, "tick": 0, "expectedEvent": "gameOver", "expectedBoardChange": false }
+      ]
+    },
+    {
+      "csvTask": "Implement lock and merge logic",
+      "deliverable": "engine.ts",
+      "dependencies": ["Implement deterministic engine tick loop", "Implement piece spawn logic"],
+      "functionSignatures": ["lockPiece(): Event[]"],
+      "stubGoldenSnapshot": {
+        "current": { "type":"T", "matrix":"3x3 array", "x":4, "y":0, "rotation":0, "color":5 }
+      },
+      "edgeCases": [
+        { "scenario": "softDropLock", "input": "softDrop", "tick": 15, "expectedEvent": "lock", "expectedBoardChange": true },
+        { "scenario": "backToBackTSpin", "input": "rotateCCW", "tick": 12, "expectedEvent": "tSpin", "backToBack": 1 }
+      ]
+    },
+    {
+      "csvTask": "Integrate PRNG/bag",
+      "deliverable": "engine.ts",
+      "dependencies": ["rng.ts", "Engine tick loop"],
+      "functionSignatures": ["bag7(): number[]", "serialize(): Uint32Array", "deserialize(state: Uint32Array): void"],
+      "stubGoldenSnapshot": {
+        "prngState": [987654321],
+        "bagState": { "bag": [0,1,2,3,4,5,6], "index": 0 }
+      },
+      "edgeCases": [
+        { "scenario": "bagWraparound", "input": null, "tick": 100, "expectedNextPiece": 0 }
+      ]
+    },
+    {
+      "csvTask": "Implement SRS rotation and wall kicks",
+      "deliverable": "rules.ts",
+      "dependencies": [],
+      "functionSignatures": ["rotate(piece: Piece, direction: RotateDir, board: Board): boolean"],
+      "stubGoldenSnapshot": {},
+      "edgeCases": [
+        { "scenario": "rotateAgainstWall", "input": "rotateCW", "tick": 5, "expectedResult": true },
+        { "scenario": "rotateInCorner", "input": "rotateCCW", "tick": 7, "expectedResult": false }
+      ]
+    },
+    {
+      "csvTask": "Worker message routing",
+      "deliverable": "worker.ts",
+      "dependencies": ["Engine tick loop", "Recover"],
+      "functionSignatures": ["routeMessage(msg: Message): void"],
+      "stubGoldenSnapshot": {},
+      "edgeCases": [
+        { "scenario": "invalidProtocolVersion", "input": {"protocolVersion":999}, "tick": null, "expectedEvent":"error" },
+        { "scenario": "outOfOrderMessage", "input": {"seq": -1}, "tick": null, "expectedEvent":"resync" }
+      ]
+    },
+    {
+      "csvTask": "Recover handler",
+      "deliverable": "worker.ts",
+      "dependencies": ["Recover"],
+      "functionSignatures": ["recover(snapshot: Snapshot): void"],
+      "stubGoldenSnapshot": {
+        "snapshotId": 42,
+        "tick": 42
+      },
+      "edgeCases": [
+        { "scenario": "corruptedSnapshot", "input": null, "tick": null, "expectedEvent":"requestFreshSnapshot" }
+      ]
+    },
+    {
+      "csvTask": "Replay Player",
+      "deliverable": "replayPlayer.ts",
+      "dependencies": ["Engine tick loop", "PRNG/Bag"],
+      "functionSignatures": ["loadReplay(seed: number, inputs: Input[]): void", "play(): void"],
+      "stubGoldenSnapshot": {},
+      "edgeCases": [
+        { "scenario": "replayMismatch", "input": "seedMismatch", "tick": 0, "expectedResult":"assertFailure" }
+      ]
+    },
+    {
+      "csvTask": "Renderer MVP PixiJS",
+      "deliverable": "pixiRenderer.ts",
+      "dependencies": ["RenderAPI"],
+      "functionSignatures": ["render(snapshot: Snapshot, alpha: number): void", "subscribeEvents(events: Event[]): void"],
+      "stubGoldenSnapshot": {},
+      "edgeCases": [
+        { "scenario": "missingSnapshot", "input": null, "tick": null, "expectedEvent":"requestSnapshot" },
+        { "scenario": "snapshotDelay", "input": null, "tick": null, "expectedResult":"interpolationAlpha" }
+      ]
+    }
+  ],
+  "featureFlags": {
+    "ENABLE_VISUALIZER": "Optional post-MVP shader/particle visualizer",
+    "ENABLE_PARTICLES": "Optional particle system",
+    "ENABLE_AUDIO_SYNC": "Optional tick-to-time audio sync"
+  }
+}

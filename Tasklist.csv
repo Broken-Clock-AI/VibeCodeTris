@@ -1,0 +1,24 @@
+Epic,Task,Deliverable,Dependencies,Acceptance Criteria,Priority
+Engine Core,Implement deterministic engine tick loop,engine.ts,,tick() emits Snapshot every tick; gravity, lock, DAS/ARR applied correctly; board updates correctly,High
+Engine Core,Implement piece spawn logic,engine.ts,,spawnPiece() produces correct piece type at spawn location; respects bag sequence,High
+Engine Core,Implement lock and merge logic,engine.ts,Engine tick loop,lockPiece() triggers correct events; board state updated; back-to-back/combo updated,High
+Engine Core,Integrate PRNG/bag,engine.ts,rng.ts;engine tick loop,bag sequence deterministic across seeds; PRNG state serialized in snapshot,High
+Rules,Implement SRS rotation and wall kicks,rules.ts,,rotate() applies correct rotation; wall kicks prevent collisions; unit tests pass,High
+Rules,Implement scoring logic,rules.ts,,scoreLines() calculates correct score for line clears, T-Spins, back-to-back, combo; unit tests pass,High
+PRNG/Bag,Seedable integer-only PRNG,rng.ts,,next() deterministic; serialize()/deserialize() works; bag7() produces correct 7-bag sequence,High
+Worker,Implement message routing,worker.ts,Engine tick loop;Recover,routeMessage() handles start/input/requestSnapshot/recover; rejects invalid protocolVersion,High
+Worker,Implement recover handler,worker.ts,Recover,Recover(snapshot) restores engine state correctly; snapshot checksum validated; crash/recover tests pass,High
+Recover,Implement snapshot validation,recover.ts,,validateSnapshot() checks checksum, protocolVersion, engineVersion; returns true/false,High
+Recover,Implement snapshot bootstrap,recover.ts,validateSnapshot(),bootstrapFromSnapshot() restores engine state including PRNG/bag/lock/back-to-back/combo,High
+Renderer,Implement MVP PixiJS renderer,pixiRenderer.ts,RenderAPI,render() draws board, ghost, HUD correctly; alpha interpolation works,High
+Renderer Adapter,Implement snapshot subscription,renderAPI.ts,,subscribe() callback receives snapshots/events; renderer displays correctly,High
+Replay Tool,Implement replay player,replayPlayer.ts,Engine tick loop;PRNG/Bag,loadReplay() + play() reproduces deterministic board; matches golden snapshot hashes,High
+UI,Implement keyboard controls,controls.tsx,Worker,Inputs reach worker correctly; DAS/ARR behavior deterministic; hold/hard drop functions as expected,High
+UI,Implement touch controls,controls.tsx,Worker,Touch mapping matches spec; swipe/tap/long press mapped correctly; optional DAS repeat supported,Medium
+Accessibility,Implement HUD for screen readers,accessibility.ts,Renderer,HUD uses aria-live; board summary readable; screen-reader passes usability test,High
+Tests,Unit tests for engine core,/tests/unit,Engine tick loop;Rules;PRNG,Rotation, collision, lock, scoring, DAS/ARR deterministic; all unit tests pass,High
+Tests,Integration/golden tests,/tests/integration,Replay player;Worker;Engine,Replay seed+input reproduces board hash at multiple checkpoints; crash/recover works; all integration tests pass,High
+Constants,Define config and defaults,constants.ts,,DAS/ARR/gravity/TPS values available; feature flags defined,Medium
+Optional,Visualizer shaders and bloom,shaders/,Renderer,Particles render; shader effects appear correctly; gated by ENABLE_VISUALIZER flag,Low
+Optional,Particles and advanced events,Renderer,Renderer,Event-driven particles appear; performance-aware; gated by ENABLE_PARTICLES,Low
+Optional,Audio sync and WebAudio,Renderer,Renderer,Audio events play with correct timing; supports mute/SFX/music toggles; optional ENABLE_AUDIO_SYNC,Low
