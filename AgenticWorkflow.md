@@ -1,4 +1,4 @@
-### **Git-Based Agentic Workflow**
+n### **Git-Based Agentic Workflow**
 
 This document outlines the Git-based workflow we will use to ensure project integrity, provide consistent checkpoints, and prevent accidental damage during agentic development.
 

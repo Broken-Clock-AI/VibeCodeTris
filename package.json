@@ -1,0 +1,17 @@
+{
+  "name": "vibecodetris",
+  "version": "1.0.0",
+  "description": "This repository contains the source code for a fully deterministic, worker-authoritative Tetris engine built with TypeScript. The project prioritizes determinism, replayability, and a clean separation between game logic and rendering.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^24.7.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
