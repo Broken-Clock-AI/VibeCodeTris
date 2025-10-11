@@ -78,6 +78,51 @@ export class TetrisEngine {
   }
 
   /**
+   * Creates a new TetrisEngine instance from a snapshot.
+   * @param snapshot The snapshot to restore from.
+   * @returns A new TetrisEngine instance.
+   */
+  public static fromSnapshot(snapshot: Snapshot): TetrisEngine {
+    // Note: We pass a dummy seed to the constructor because we're about to overwrite everything.
+    const engine = new TetrisEngine(1);
+
+    engine.tickCounter = snapshot.tick;
+    engine.prng = new PRNG(snapshot.prngState[0]);
+    
+    engine.board = new Uint8Array(snapshot.boardBuffer);
+    
+    engine.bag = Array.from(snapshot.bagState.bag).map(typeId => PIECE_TYPES[typeId - 1]);
+    engine.nextTypes = snapshot.nextTypes;
+    engine.holdType = snapshot.holdType;
+
+    if (snapshot.current) {
+        const shape = PIECE_SHAPES[snapshot.current.type as keyof typeof PIECE_SHAPES];
+        const matrix = [];
+        for (let i = 0; i < shape.length; i++) {
+            matrix.push(Array.from(snapshot.current.matrix.slice(i * shape[0].length, (i + 1) * shape[0].length)));
+        }
+        engine.currentPiece = {
+            ...snapshot.current,
+            matrix: matrix,
+        };
+    } else {
+        engine.currentPiece = null;
+    }
+
+    engine.lockCounter = snapshot.lockCounter;
+    engine.gravityCounter = snapshot.gravityCounter;
+    engine.score = snapshot.score;
+    engine.level = snapshot.level;
+    engine.lines = snapshot.lines;
+    engine.backToBack = snapshot.backToBack;
+    engine.combo = snapshot.combo;
+    
+    engine.events = []; // Events are ephemeral and not restored
+
+    return engine;
+  }
+
+  /**
    * The main deterministic game loop.
    */
   public tick(): Snapshot {
@@ -285,6 +330,11 @@ export class TetrisEngine {
         bagUint8[i] = PIECE_TYPES.indexOf(this.bag[i]) + 1;
     }
 
+    // Create a single copy of the board buffer to be used for both
+    // the checksum and the transferable payload. The engine's internal
+    // buffer must NOT be transferred.
+    const boardBufferCopy = this.board.buffer.slice(0) as ArrayBuffer;
+
     const snapshotData: Omit<Snapshot, 'checksum'> = {
         protocolVersion: PROTOCOL_VERSION,
         engineVersion: CURRENT_ENGINE_VERSION,
@@ -305,7 +355,7 @@ export class TetrisEngine {
 
         rows: ROWS,
         cols: COLS,
-        boardBuffer: this.board.buffer.slice(0) as ArrayBuffer, // Create a copy for checksum calculation
+        boardBuffer: boardBufferCopy,
         
         current: this.currentPiece ? {
             ...this.currentPiece,
@@ -324,10 +374,8 @@ export class TetrisEngine {
 
     const checksum = calculateChecksum(snapshotData);
     
-    // Return the full snapshot, including the board buffer that was copied.
     return {
         ...snapshotData,
-        boardBuffer: this.board.buffer as ArrayBuffer, // Return the original buffer for transferring
         checksum,
     };
   }

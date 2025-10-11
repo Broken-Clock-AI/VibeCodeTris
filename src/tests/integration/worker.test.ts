@@ -54,7 +54,7 @@ describe('Worker Integration Tests', () => {
         worker.postMessage({ type: 'start', seq: 0, payload: { seed: 12345 } });
     }, 10000); // 10s timeout for async test
 
-    test('should recover from a valid snapshot', (done) => {
+    test('should recover from a valid snapshot and continue deterministically', (done) => {
         let recovered = false;
         worker.on('message', (msg) => {
             if (msg.type === 'snapshot' && lastSnapshot && !recovered) {
@@ -66,9 +66,20 @@ describe('Worker Integration Tests', () => {
                         execArgv: ['-r', 'ts-node/register'],
                     });
 
+                    let recoveryVerified = false;
                     newWorker.on('message', (newMsg) => {
-                        if (newMsg.type === 'log' && newMsg.payload.msg.includes('Engine recovered')) {
-                            // The new worker has successfully recovered
+                        if (newMsg.type === 'snapshot' && !recoveryVerified) {
+                            recoveryVerified = true;
+                            const recoveredSnapshot = newMsg.payload;
+                            
+                            // --- Verification ---
+                            // The new snapshot should be exactly one tick after the one we recovered from.
+                            expect(recoveredSnapshot.tick).toBe(lastSnapshot!.tick + 1);
+                            // Key state should be identical.
+                            expect(recoveredSnapshot.score).toBe(lastSnapshot!.score);
+                            expect(recoveredSnapshot.level).toBe(lastSnapshot!.level);
+                            expect(recoveredSnapshot.lines).toBe(lastSnapshot!.lines);
+
                             newWorker.terminate();
                             done();
                         }

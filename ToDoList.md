@@ -39,10 +39,10 @@ This to-do list is generated from the `Tasklist.csv` and tracks the development 
 ## Phase 3: The Renderer & User Interface
 
 ### Epic: Renderer
-- [ ] **Task:** Implement MVP PixiJS renderer (`pixiRenderer.ts`)
+- [x] **Task:** Implement MVP PixiJS renderer (`pixiRenderer.ts`)
 
 ### Epic: Renderer Adapter
-- [ ] **Task:** Implement snapshot subscription (`renderAPI.ts`)
+- [x] **Task:** Implement snapshot subscription (`renderAPI.ts`)
 
 ### Epic: UI
 - [ ] **Task:** Implement keyboard controls (`controls.tsx`)

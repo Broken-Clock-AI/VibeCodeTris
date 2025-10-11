@@ -2,12 +2,7 @@
 import { TetrisEngine } from './engine';
 import { TICK_MS } from './constants';
 import { validateSnapshot } from './recover';
-import { parentPort, isMainThread } from 'worker_threads';
 import { GameInput, Snapshot } from './types';
-
-// --- Isomorphic Setup ---
-// This script is designed to run in both a browser Web Worker and a Node.js worker_thread.
-const isNode = typeof parentPort !== 'undefined' && !isMainThread;
 
 // --- Worker State ---
 let engine: TetrisEngine | null = null;
@@ -23,11 +18,7 @@ function post(type: string, payload?: any, transferables?: Transferable[]) {
         type,
         payload,
     };
-    if (isNode) {
-        parentPort!.postMessage(message);
-    } else {
-        self.postMessage(message, transferables || []);
-    }
+    self.postMessage(message, transferables || []);
 }
 
 function stopEngine() {
@@ -52,8 +43,7 @@ function recoverFromSnapshot(snapshot: Snapshot) {
     if (validateSnapshot(snapshot)) {
         stopEngine();
         console.log(`Worker recovering from snapshot ${snapshot.snapshotId}`);
-        // TODO: Implement TetrisEngine.fromSnapshot(snapshot)
-        engine = new TetrisEngine(snapshot.prngState[0]); 
+        engine = TetrisEngine.fromSnapshot(snapshot); 
         
         loop = setInterval(processTick, TICK_MS);
         post('log', { level: 'info', msg: `Engine recovered from snapshot ${snapshot.snapshotId}.` });
@@ -117,12 +107,8 @@ function handleMessage(data: any) {
 }
 
 // --- Attach Message Listener ---
-if (isNode) {
-    parentPort!.on('message', handleMessage);
-} else {
-    self.onmessage = (e: MessageEvent) => {
-        handleMessage(e.data);
-    };
-}
+self.onmessage = (e: MessageEvent) => {
+    handleMessage(e.data);
+};
 
 console.log("Worker script loaded and message handler attached.");
