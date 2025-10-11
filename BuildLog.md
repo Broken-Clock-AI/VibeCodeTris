@@ -5,6 +5,16 @@ This file tracks the build and development process.
 **Commit: `[Will be generated]`**
 *   **Date:** 2025-10-10
 *   **Author:** Gemini
+*   **Summary:** `fix(renderer): Correct critical rendering bugs and API usage`
+*   **Details:**
+    *   Fixed a critical rendering bug where falling pieces were invisible until they locked. The renderer was incorrectly using the piece's final color value as an index into the color palette.
+    *   Resolved all PixiJS v8 deprecation warnings by updating the graphics drawing methods (`beginFill`, `lineStyle`, `drawRect`) to the modern API (`fill`, `stroke`, `rect`).
+    *   Fixed a TypeScript error in the `destroy` method by removing an invalid `basePath` property from the options.
+    *   The renderer is now stable, warning-free, and correctly displays all game elements.
+
+**Commit: `[Will be generated]`**
+*   **Date:** 2025-10-10
+*   **Author:** Gemini
 *   **Summary:** `feat(renderer): Implement visual renderer and fix critical bugs`
 *   **Details:**
     *   Set up the frontend build system using Vite and installed PixiJS.

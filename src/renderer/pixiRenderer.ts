@@ -81,10 +81,9 @@ class PixiRenderer {
             const block = this.boardBlocks[i];
             
             block.clear();
-            block.beginFill(COLORS[colorIndex]);
-            block.lineStyle(BORDER_WIDTH, 0x333333, 0.5);
-            block.drawRect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
-            block.endFill();
+            block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
+            block.fill(COLORS[colorIndex]);
+            block.stroke({ width: BORDER_WIDTH, color: 0x333333, alpha: 0.5 });
         }
 
         // Draw the current piece
@@ -103,10 +102,9 @@ class PixiRenderer {
                         if (blockIndex >= 0 && blockIndex < this.boardBlocks.length) {
                             const block = this.boardBlocks[blockIndex];
                             block.clear();
-                            block.beginFill(COLORS[piece.color]);
-                            block.lineStyle(BORDER_WIDTH, 0x333333, 0.5);
-                            block.drawRect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
-                            block.endFill();
+                            block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
+                            block.fill(piece.color); // Use the direct color value
+                            block.stroke({ width: BORDER_WIDTH, color: 0x333333, alpha: 0.5 });
                         }
                     }
                 }
@@ -122,7 +120,7 @@ class PixiRenderer {
 
     public destroy() {
         renderAPI.destroy();
-        this.app.destroy(true, { children: true, texture: true, basePath: true });
+        this.app.destroy(true, { children: true, texture: true });
     }
 }
 
