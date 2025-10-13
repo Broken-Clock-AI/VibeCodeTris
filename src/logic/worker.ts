@@ -1,4 +1,29 @@
 // src/logic/worker.ts
+
+// --- Environment Agnostic Shim ---
+// This block makes the worker compatible with both browser and Node.js environments.
+// It creates a `self` object that mimics the WorkerGlobalScope for Node.js.
+if (typeof self === 'undefined') {
+    const { parentPort } = require('worker_threads');
+    
+    // Create a `self` object that mimics the properties we need from the browser's WorkerGlobalScope
+    global.self = {
+        postMessage: (message: any, transferables?: Transferable[]) => {
+            parentPort.postMessage(message, transferables);
+        },
+        onmessage: null, // This will be assigned by the worker code later
+    } as any; // Use 'as any' to satisfy TypeScript, as the signatures are not identical
+
+    // When the parent port receives a message, trigger the `self.onmessage` handler
+    parentPort.on('message', (message: any) => {
+        if (global.self.onmessage) {
+            // Simulate the MessageEvent object that the browser would provide
+            global.self.onmessage({ data: message } as MessageEvent);
+        }
+    });
+}
+// --- End Shim ---
+
 import { TetrisEngine } from './engine';
 import { TICK_MS } from './constants';
 import { validateSnapshot } from './recover';
@@ -107,7 +132,9 @@ function handleMessage(data: any) {
 }
 
 // --- Attach Message Listener ---
-self.onmessage = (e: MessageEvent) => {
+// @ts-ignore: This is the most reliable way to handle the type mismatch
+// between the browser's MessageEvent and Node's simple message object.
+self.onmessage = (e: any) => {
     handleMessage(e.data);
 };
 

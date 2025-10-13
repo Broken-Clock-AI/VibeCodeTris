@@ -45,8 +45,11 @@ This to-do list is generated from the `Tasklist.csv` and tracks the development 
 - [x] **Task:** Implement snapshot subscription (`renderAPI.ts`)
 
 ### Epic: UI
-- [ ] **Task:** Implement keyboard controls (`controls.tsx`)
-- [ ] **Task:** Implement touch controls (`controls.tsx`)
+- [x] **Task:** Implement keyboard controls (`controls.tsx`)
+- [ ] **Task:** Implement touch controls (`touch.ts`)
+    - [ ] **Sub-task:** Implement swipe gestures for movement and dropping.
+    - [ ] **Sub-task:** Implement tap gestures for rotation.
+    - [ ] **Sub-task:** Add on-screen button for hold action.
 
 ### Epic: Accessibility
 - [ ] **Task:** Implement HUD for screen readers (`accessibility.ts`)

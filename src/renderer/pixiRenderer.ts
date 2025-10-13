@@ -20,7 +20,7 @@ const COLORS = [
     0xFF0000, // 7: Z (Red)
 ];
 
-class PixiRenderer {
+export class PixiRenderer {
     private app: PIXI.Application;
     private boardContainer: PIXI.Container;
     private boardBlocks: PIXI.Graphics[] = [];
@@ -122,23 +122,4 @@ class PixiRenderer {
         renderAPI.destroy();
         this.app.destroy(true, { children: true, texture: true });
     }
-}
-
-// --- Application Entry Point ---
-async function main() {
-    const container = document.getElementById('game-container');
-    if (!container) {
-        console.error("Could not find #game-container element.");
-        return;
-    }
-
-    const renderer = await PixiRenderer.create(container);
-    renderer.start();
-}
-
-// Run the main function when the DOM is ready.
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', main);
-} else {
-    main();
 }

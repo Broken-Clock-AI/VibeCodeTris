@@ -1,6 +1,6 @@
 // src/main.ts
 import { PixiRenderer } from './renderer/pixiRenderer';
-import { Controls } from './ui/controls';
+import { InputManager } from './ui/input/InputManager';
 import { renderAPI } from './renderer/renderAPI';
 
 // Main application entry point
@@ -12,14 +12,18 @@ async function main() {
     }
     const renderer = await PixiRenderer.create(container);
 
-    // 2. Create and enable controls
-    const controls = new Controls();
-    controls.enable();
+    // 2. Create and enable the input manager
+    const inputManager = new InputManager();
 
     // 3. Start the renderer (which in turn starts the game)
     renderer.start();
 
     console.log('Application initialized.');
+
+    // Note: To disable controls later, you would call inputManager.disable()
 }
 
-main().catch(console.error);
+// Wait for the DOM to be fully loaded before starting the application
+document.addEventListener('DOMContentLoaded', () => {
+    main().catch(console.error);
+});
