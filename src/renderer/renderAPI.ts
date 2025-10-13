@@ -17,6 +17,10 @@ class EventEmitter<TEventMap extends Record<string, any>> {
     public emit<K extends keyof TEventMap>(event: K, data: TEventMap[K]): void {
         this.listeners[event]?.forEach(listener => listener(data));
     }
+
+    public clear(): void {
+        this.listeners = {};
+    }
 }
 
 // --- Render API ---
@@ -95,8 +99,8 @@ class RenderAPI extends EventEmitter<{
      * Sends a user input action to the worker.
      * @param action The action to send (e.g., 'moveLeft').
      */
-    public sendInput(action: string) {
-        this.post('input', { action });
+    public sendInput(action: any) {
+        this.post('input', action);
     }
 
     /**
@@ -107,7 +111,7 @@ class RenderAPI extends EventEmitter<{
     }
 
     /**
-     * Destroys the worker.
+     * Destroys the worker and clears all event listeners.
      */
     public destroy() {
         if (this.worker) {
@@ -115,6 +119,7 @@ class RenderAPI extends EventEmitter<{
             this.worker = null;
             console.log("Worker terminated.");
         }
+        this.clear(); // Clear all event listeners
     }
 }
 

@@ -30,10 +30,20 @@ export function setupTouchControls(actionHandler: (action: GameAction) => void):
         }
     };
 
+    const onButtonRelease = (event: Event) => {
+        event.preventDefault();
+        const targetId = (event.currentTarget as HTMLElement).id;
+        const action = buttonToActionMap[targetId];
+        if (action && (action === 'moveLeft' || action === 'moveRight' || action === 'softDrop')) {
+            actionHandler(`${action}_release` as GameAction);
+        }
+    };
+
     const buttons = Object.keys(buttonToActionMap).map(id => document.getElementById(id));
     buttons.forEach(button => {
         if (button) {
             button.addEventListener('touchstart', onButtonPress, { passive: false });
+            button.addEventListener('touchend', onButtonRelease, { passive: false });
         }
     });
 
@@ -63,7 +73,8 @@ export function setupTouchControls(actionHandler: (action: GameAction) => void):
             } else if (deltaX < -swipeThresholdX) {
                 actionHandler('moveLeft');
             }
-        } else { // Vertical movement
+        }
+        else { // Vertical movement
             if (deltaY > swipeThresholdY) {
                 actionHandler('softDrop');
             }
@@ -80,6 +91,7 @@ export function setupTouchControls(actionHandler: (action: GameAction) => void):
         buttons.forEach(button => {
             if (button) {
                 button.removeEventListener('touchstart', onButtonPress);
+                button.removeEventListener('touchend', onButtonRelease);
             }
         });
         if (gameContainer) {

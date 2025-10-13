@@ -1,29 +1,82 @@
 // src/main.ts
 import { PixiRenderer } from './renderer/pixiRenderer';
 import { InputManager } from './ui/input/InputManager';
-import { renderAPI } from './renderer/renderAPI';
+import { UIStateManager, UIState } from './ui/state';
 
-// Main application entry point
 async function main() {
-    // 1. Create and initialize the renderer
-    const container = document.getElementById('game-container');
-    if (!container) {
-        throw new Error('Game container not found');
-    }
-    const renderer = await PixiRenderer.create(container);
-
-    // 2. Create and enable the input manager
+    const uiManager = new UIStateManager();
     const inputManager = new InputManager();
+    let renderer: PixiRenderer | null = null;
 
-    // 3. Start the renderer (which in turn starts the game)
-    renderer.start();
+    const startGame = async () => {
+        if (renderer) {
+            renderer.destroy();
+            renderer = null;
+        }
+        
+        uiManager.changeState(UIState.InGame);
+        const container = document.getElementById('game-container');
+        if (!container) throw new Error('Game container not found');
+        
+        // Clear any previous canvas
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+
+        renderer = await PixiRenderer.create(container, uiManager);
+        renderer.start();
+        console.log('Game started.');
+    };
+
+    // --- Get UI Elements ---
+    const playButton = document.getElementById('play-button');
+    const settingsButton = document.getElementById('settings-button');
+    const backButton = document.getElementById('back-button-settings');
+    const playAgainButton = document.getElementById('play-again-button');
+    const mainMenuButton = document.getElementById('main-menu-button');
+    const dasSlider = document.getElementById('das-slider') as HTMLInputElement;
+    const arrSlider = document.getElementById('arr-slider') as HTMLInputElement;
+    const dasValue = document.getElementById('das-value');
+    const arrValue = document.getElementById('arr-value');
+
+    if (!playButton || !settingsButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue) {
+        throw new Error('One or more UI elements not found');
+    }
+
+    // --- Event Listeners ---
+    playButton.addEventListener('click', startGame);
+    playAgainButton.addEventListener('click', startGame);
+
+    mainMenuButton.addEventListener('click', () => {
+        if (renderer) {
+            renderer.destroy();
+            renderer = null;
+        }
+        uiManager.changeState(UIState.MainMenu);
+    });
+
+    settingsButton.addEventListener('click', () => {
+        uiManager.changeState(UIState.Settings);
+    });
+
+    backButton.addEventListener('click', () => {
+        uiManager.changeState(UIState.MainMenu);
+    });
+
+    const updateTimings = () => {
+        const das = parseInt(dasSlider.value, 10);
+        const arr = parseInt(arrSlider.value, 10);
+        dasValue.textContent = das.toString();
+        arrValue.textContent = arr.toString();
+        inputManager.updateTimings(das, arr); 
+    };
+
+    dasSlider.addEventListener('input', updateTimings);
+    arrSlider.addEventListener('input', updateTimings);
 
     console.log('Application initialized.');
-
-    // Note: To disable controls later, you would call inputManager.disable()
 }
 
-// Wait for the DOM to be fully loaded before starting the application
 document.addEventListener('DOMContentLoaded', () => {
     main().catch(console.error);
 });

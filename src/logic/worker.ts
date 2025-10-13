@@ -111,7 +111,11 @@ function handleMessage(data: any) {
         
         case 'input':
             if (!engine) return;
-            engine.handleInput(payload.action);
+            if (typeof payload === 'object' && payload.type === 'setTimings') {
+                engine.setTimings(payload.das, payload.arr);
+            } else {
+                engine.handleInput(payload);
+            }
             break;
 
         case 'recover':

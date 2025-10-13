@@ -26,10 +26,20 @@ export function setupKeyboardControls(onAction: (action: GameAction) => void): (
         }
     };
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+        const action = KEY_MAP[e.key];
+        if (action && (action === 'moveLeft' || action === 'moveRight' || action === 'softDrop')) {
+            e.preventDefault();
+            onAction(`${action}_release` as GameAction);
+        }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
 
     // Return a cleanup function to be called by the manager
     return () => {
         document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('keyup', handleKeyUp);
     };
 }

@@ -58,6 +58,7 @@ export type Snapshot = {
   score: number;
   level: number;
   lines: number;
+  gameOver: boolean;
 
   // --- Ephemeral State ---
   events: GameEvent[];

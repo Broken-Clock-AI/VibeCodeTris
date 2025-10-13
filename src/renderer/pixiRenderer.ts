@@ -3,6 +3,7 @@ import * as PIXI from 'pixi.js';
 import { renderAPI } from './renderAPI';
 import { COLS, ROWS } from '../logic/constants';
 import { Snapshot } from '../logic/types';
+import { UIStateManager, UIState } from '../ui/state';
 
 const BLOCK_SIZE = 30;
 const BORDER_WIDTH = 2;
@@ -24,14 +25,16 @@ export class PixiRenderer {
     private app: PIXI.Application;
     private boardContainer: PIXI.Container;
     private boardBlocks: PIXI.Graphics[] = [];
+    private uiManager: UIStateManager;
 
-    private constructor() {
+    private constructor(uiManager: UIStateManager) {
         this.app = new PIXI.Application();
         this.boardContainer = new PIXI.Container();
+        this.uiManager = uiManager;
     }
 
-    public static async create(container: HTMLElement): Promise<PixiRenderer> {
-        const renderer = new PixiRenderer();
+    public static async create(container: HTMLElement, uiManager: UIStateManager): Promise<PixiRenderer> {
+        const renderer = new PixiRenderer(uiManager);
         await renderer.app.init({
             width: BOARD_WIDTH,
             height: BOARD_HEIGHT,
@@ -60,7 +63,15 @@ export class PixiRenderer {
 
     private setupSubscriptions() {
         renderAPI.on('snapshot', (snapshot) => {
-            // console.log(`Received snapshot for tick: ${snapshot.tick}`);
+            if (snapshot.gameOver) {
+                this.uiManager.changeState(UIState.GameOver);
+                const finalScoreEl = document.getElementById('final-score');
+                if (finalScoreEl) {
+                    finalScoreEl.textContent = snapshot.score.toString();
+                }
+                this.app.ticker.stop();
+                return;
+            }
             this.drawBoard(snapshot);
         });
 

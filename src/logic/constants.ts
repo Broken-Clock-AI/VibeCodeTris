@@ -7,7 +7,7 @@ export const TICK_MS = 1000 / 60; // 60 ticks per second
 
 // --- Timing (in Ticks) ---
 export const DAS = 10; // Delayed Auto Shift
-export const ARR = 1;  // Auto Repeat Rate
+export const ARR = 2;  // Auto Repeat Rate
 export const LOCK_DELAY = 30; // Ticks before a piece locks down
 export const GRAVITY_START_DELAY = 60; // Ticks before gravity starts
 

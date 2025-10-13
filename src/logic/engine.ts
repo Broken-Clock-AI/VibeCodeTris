@@ -1,4 +1,4 @@
-import { COLS, DAS, GRAVITY_START_DELAY, LOCK_DELAY, ROWS, CURRENT_ENGINE_VERSION, PROTOCOL_VERSION, SNAPSHOT_SCHEMA_VERSION } from './constants';
+import { COLS, DAS, GRAVITY_START_DELAY, LOCK_DELAY, ROWS, CURRENT_ENGINE_VERSION, PROTOCOL_VERSION, SNAPSHOT_SCHEMA_VERSION, ARR } from './constants';
 import { PRNG } from './rng';
 import { calculateScore, isValidPosition, rotateMatrix } from './rules';
 import { GameEvent, Snapshot } from './types';
@@ -41,6 +41,10 @@ export class TetrisEngine {
   // --- Timing and Input State ---
   private lockCounter: number;
   private gravityCounter: number;
+  private das: number;
+  private arr: number;
+  private dasCounter: { left: number; right: number; down: number };
+  private isMoving: { left: boolean; right: boolean; down: boolean };
   
   // --- Gameplay State ---
   private score: number;
@@ -48,6 +52,7 @@ export class TetrisEngine {
   private lines: number;
   private backToBack: number;
   private combo: number;
+  private gameOver: boolean;
   
   // --- Ephemeral State ---
   private events: GameEvent[];
@@ -67,12 +72,17 @@ export class TetrisEngine {
 
     this.lockCounter = 0;
     this.gravityCounter = 0;
+    this.das = DAS;
+    this.arr = ARR;
+    this.dasCounter = { left: 0, right: 0, down: 0 };
+    this.isMoving = { left: false, right: false, down: false };
 
     this.score = 0;
     this.level = 1;
     this.lines = 0;
     this.backToBack = 0;
     this.combo = 0;
+    this.gameOver = false;
 
     this.events = [];
   }
@@ -123,15 +133,31 @@ export class TetrisEngine {
   }
 
   /**
+   * Updates the engine's timing values.
+   * @param das The new Delayed Auto Shift value.
+   * @param arr The new Auto Repeat Rate value.
+   */
+  public setTimings(das: number, arr: number): void {
+    this.das = das;
+    this.arr = arr;
+  }
+
+  /**
    * The main deterministic game loop.
    */
   public tick(): Snapshot {
+    if (this.gameOver) {
+        return this.createSnapshot();
+    }
     this.tickCounter++;
     this.events = []; // Clear events for the new tick
 
     if (!this.currentPiece) {
         this.spawnPiece();
     }
+
+    // --- Handle continuous movement (DAS/ARR) ---
+    this.updateMovement();
 
     // --- Gravity ---
     if (this.currentPiece) {
@@ -162,19 +188,34 @@ export class TetrisEngine {
    * @param action The input action to process (e.g., 'moveLeft', 'rotateCW').
    */
   public handleInput(action: string): void {
-    if (!this.currentPiece) return;
+    if (!this.currentPiece || this.gameOver) return;
 
     let { x, y, matrix } = this.currentPiece;
 
     switch (action) {
         case 'moveLeft':
+            this.isMoving.left = true;
+            this.dasCounter.left = 0;
             x--;
             break;
+        case 'moveLeft_release':
+            this.isMoving.left = false;
+            break;
         case 'moveRight':
+            this.isMoving.right = true;
+            this.dasCounter.right = 0;
             x++;
             break;
+        case 'moveRight_release':
+            this.isMoving.right = false;
+            break;
         case 'softDrop':
+            this.isMoving.down = true;
+            this.dasCounter.down = 0;
             y++;
+            break;
+        case 'softDrop_release':
+            this.isMoving.down = false;
             break;
         case 'hardDrop':
             // This will be handled by finding the final position and locking instantly
@@ -201,6 +242,49 @@ export class TetrisEngine {
         this.currentPiece.x = x;
         this.currentPiece.y = y;
         this.currentPiece.matrix = matrix;
+    }
+  }
+
+  /**
+   * Handles the continuous movement logic for DAS and ARR.
+   */
+  private updateMovement(): void {
+    if (!this.currentPiece) return;
+
+    // --- Left Movement ---
+    if (this.isMoving.left) {
+        this.dasCounter.left++;
+        if (this.dasCounter.left > this.das) {
+            if ((this.dasCounter.left - this.das) % this.arr === 0) {
+                if (isValidPosition(this.currentPiece.matrix, this.currentPiece.x - 1, this.currentPiece.y, this.board)) {
+                    this.currentPiece.x--;
+                }
+            }
+        }
+    }
+
+    // --- Right Movement ---
+    if (this.isMoving.right) {
+        this.dasCounter.right++;
+        if (this.dasCounter.right > this.das) {
+            if ((this.dasCounter.right - this.das) % this.arr === 0) {
+                if (isValidPosition(this.currentPiece.matrix, this.currentPiece.x + 1, this.currentPiece.y, this.board)) {
+                    this.currentPiece.x++;
+                }
+            }
+        }
+    }
+
+    // --- Soft Drop Movement ---
+    if (this.isMoving.down) {
+        this.dasCounter.down++;
+        if (this.dasCounter.down > this.das) {
+            if ((this.dasCounter.down - this.das) % this.arr === 0) {
+                if (isValidPosition(this.currentPiece.matrix, this.currentPiece.x, this.currentPiece.y + 1, this.board)) {
+                    this.currentPiece.y++;
+                }
+            }
+        }
     }
   }
 
@@ -318,7 +402,11 @@ export class TetrisEngine {
         color,
     };
 
-    // TODO: Handle game over if spawn position is invalid
+    if (!isValidPosition(this.currentPiece.matrix, this.currentPiece.x, this.currentPiece.y, this.board)) {
+        this.gameOver = true;
+        this.events.push({ type: 'gameOver', tick: this.tickCounter });
+        this.currentPiece = null;
+    }
   }
 
   /**
@@ -368,6 +456,7 @@ export class TetrisEngine {
         score: this.score,
         level: this.level,
         lines: this.lines,
+        gameOver: this.gameOver,
 
         events: this.events,
     };

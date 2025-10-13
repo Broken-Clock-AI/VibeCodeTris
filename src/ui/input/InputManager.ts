@@ -35,6 +35,15 @@ export class InputManager {
     }
 
     /**
+     * Sends new timing values to the engine.
+     * @param das The new Delayed Auto Shift value.
+     * @param arr The new Auto Repeat Rate value.
+     */
+    public updateTimings(das: number, arr: number): void {
+        renderAPI.sendInput({ type: 'setTimings', das, arr });
+    }
+
+    /**
      * Disables all active input listeners. This is useful for cleaning up
      * when the game is paused or over.
      */

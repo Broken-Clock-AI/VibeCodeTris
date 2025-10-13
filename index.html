@@ -9,13 +9,16 @@
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column; /* Arrange items vertically */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #121212;
             font-family: sans-serif;
             color: white;
+        }
+        .hidden {
+            display: none !important;
         }
         #game-container {
             border: 2px solid #fff;
@@ -48,18 +51,69 @@
         #btn-move-left { grid-column: 1; grid-row: 2; }
         #btn-hold { grid-column: 2; grid-row: 2; }
         #btn-move-right { grid-column: 3; grid-row: 2; }
+
+        /* Styles for menu buttons */
+        .menu-button {
+            background-color: #333;
+            border: 2px solid #555;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.5em;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .menu-button:hover {
+            background-color: #444;
+            border-color: #777;
+        }
     </style>
 </head>
 <body>
-    <div id="game-container"></div>
-    <div id="touch-controls">
-        <div id="btn-rot-ccw" class="touch-button">↶</div>
-        <div id="btn-hard-drop" class="touch-button">▼▼</div>
-        <div id="btn-rot-cw" class="touch-button">↷</div>
-        <div id="btn-move-left" class="touch-button">◄</div>
-        <div id="btn-hold" class="touch-button">Hold</div>
-        <div id="btn-move-right" class="touch-button">►</div>
+    <div id="app-container">
+        <!-- Main Menu Screen -->
+        <div id="main-menu">
+            <h1>VibeCodeTris</h1>
+            <button id="play-button" class="menu-button">Play</button>
+            <button id="settings-button" class="menu-button">Settings</button>
+        </div>
+
+        <!-- In-Game Screen -->
+        <div id="in-game" class="hidden">
+            <div id="game-container"></div>
+            <div id="touch-controls">
+                <div id="btn-rot-ccw" class="touch-button">↶</div>
+                <div id="btn-hard-drop" class="touch-button">▼▼</div>
+                <div id="btn-rot-cw" class="touch-button">↷</div>
+                <div id="btn-move-left" class="touch-button">◄</div>
+                <div id="btn-hold" class="touch-button">Hold</div>
+                <div id="btn-move-right" class="touch-button">►</div>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="hidden">
+            <h2>Settings</h2>
+            <div class="setting">
+                <label for="das-slider">DAS (Delayed Auto Shift): <span id="das-value">10</span></label>
+                <input type="range" id="das-slider" min="0" max="30" value="10">
+            </div>
+            <div class="setting">
+                <label for="arr-slider">ARR (Auto Repeat Rate): <span id="arr-value">1</span></label>
+                <input type="range" id="arr-slider" min="0" max="10" value="1">
+            </div>
+            <button id="back-button-settings" class="menu-button">Back</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="hidden">
+            <h2>Game Over</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="play-again-button" class="menu-button">Play Again</button>
+            <button id="main-menu-button" class="menu-button">Main Menu</button>
+        </div>
     </div>
+
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

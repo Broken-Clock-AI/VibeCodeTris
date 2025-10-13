@@ -53,3 +53,39 @@ describe('TetrisEngine: Line Clearing and Scoring', () => {
     expect(snapshot.lines).toBe(1);
   });
 });
+
+describe('TetrisEngine: Game Over', () => {
+    let engine: TetrisEngine;
+  
+    beforeEach(() => {
+      engine = new TetrisEngine(54321);
+    });
+  
+    test('should set gameOver to true when a new piece cannot be spawned', () => {
+      // Manually set up the board so the spawn area is blocked
+      const board = new Uint8Array(ROWS * COLS).fill(0);
+      // Block the middle of the top row where pieces spawn
+      board[Math.floor(COLS / 2)] = 1; 
+      board[Math.floor(COLS / 2) - 1] = 1;
+      board[Math.floor(COLS / 2) + 1] = 1;
+  
+      // @ts-ignore - Accessing private board for test setup
+      engine.board = board;
+  
+      // The next tick will attempt to spawn a piece, which should fail
+      const snapshot = engine.tick();
+  
+      // --- Assertions ---
+      // 1. The gameOver flag should be true in the snapshot
+      expect(snapshot.gameOver).toBe(true);
+  
+      // 2. A 'gameOver' event should have been dispatched
+      const gameOverEvent = snapshot.events.find(e => e.type === 'gameOver');
+      expect(gameOverEvent).toBeDefined();
+  
+      // 3. The tick counter should not advance further
+      const nextSnapshot = engine.tick();
+      expect(nextSnapshot.tick).toBe(snapshot.tick);
+    });
+  });
+  
