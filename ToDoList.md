@@ -3,6 +3,7 @@
 ---
 ### **High Priority Issues**
 - [x] **Task:** Fix unresponsive player controls.
+- [x] **Task:** Fix critical bug in touch controls causing perpetual movement.
 ---
 
 This to-do list is generated from the `Tasklist.csv` and tracks the development plan.
@@ -42,9 +43,9 @@ The following tasks are now the **immediate priority**:
 ### **Phase 2.5: UI Foundation**
 
 - [x] **Task:** Implement Game Over logic in the engine (`engine.ts`).
-- [ ] **Task:** Create a basic UI State Manager (`main.ts` or `ui/state.ts`).
-- [ ] **Task:** Build placeholder UI for Game Over and Settings screens.
-- [ ] **Task:** Implement the first Tier 1 accessibility option (e.g., Adjustable DAS/ARR) to validate the new UI pipeline.
+- [x] **Task:** Create a basic UI State Manager (`main.ts` or `ui/state.ts`).
+- [x] **Task:** Build placeholder UI for Game Over and Settings screens.
+- [x] **Task:** Implement the first Tier 1 accessibility option (e.g., Adjustable DAS/ARR) to validate the new UI pipeline.
 
 ---
 

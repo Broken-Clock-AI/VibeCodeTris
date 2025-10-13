@@ -66,18 +66,28 @@ export function setupTouchControls(actionHandler: (action: GameAction) => void):
         const deltaX = touchEndX - touchStartX;
         const deltaY = touchEndY - touchStartY;
 
+        let action: GameAction | null = null;
+
         // Prioritize horizontal movement
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
             if (deltaX > swipeThresholdX) {
-                actionHandler('moveRight');
+                action = 'moveRight';
             } else if (deltaX < -swipeThresholdX) {
-                actionHandler('moveLeft');
+                action = 'moveLeft';
             }
         }
         else { // Vertical movement
             if (deltaY > swipeThresholdY) {
-                actionHandler('softDrop');
+                action = 'softDrop';
             }
+        }
+
+        if (action) {
+            actionHandler(action);
+            // To prevent perpetual movement from a swipe, we immediately
+            // send the corresponding release action.
+            const releaseAction = `${action}_release` as GameAction;
+            setTimeout(() => actionHandler(releaseAction), 0);
         }
     };
 

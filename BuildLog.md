@@ -3,6 +3,16 @@
 This file tracks the build and development process.
 
 **Commit: `[Will be generated]`**
+*   **Date:** 2025-10-13
+*   **Author:** Gemini
+*   **Summary:** `fix(controls): Resolve critical bug in touch swipe gestures`
+*   **Details:**
+    *   Diagnosed and fixed a critical bug where swipe gestures for movement (`moveLeft`, `moveRight`, `softDrop`) would cause the piece to move perpetually.
+    *   The root cause was the swipe handler only sending the initial press action (e.g., `moveLeft`) without the corresponding `moveLeft_release` action, causing the engine's auto-repeat to never terminate.
+    *   The fix was implemented in `touch.ts` by adding logic to the `onTouchEnd` handler that immediately schedules the corresponding `_release` action after the initial action is sent.
+    *   This ensures that a swipe behaves like a quick tap, resolving the bug and making touch controls fully playable.
+
+**Commit: `[Will be generated]`**
 *   **Date:** 2025-10-12
 *   **Author:** Gemini
 *   **Summary:** `fix(controls): Implement and debug keyboard and touch controls`
