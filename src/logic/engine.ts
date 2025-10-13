@@ -300,6 +300,13 @@ export class TetrisEngine {
             if (this.currentPiece.matrix[r][c]) {
                 const boardX = this.currentPiece.x + c;
                 const boardY = this.currentPiece.y + r;
+                // Game Over Check: Piece locked above the visible board
+                if (boardY < 0) {
+                    this.gameOver = true;
+                    this.events.push({ type: 'gameOver', tick: this.tickCounter });
+                    this.currentPiece = null;
+                    return; // End the lock process immediately
+                }
                 this.board[boardY * COLS + boardX] = PIECE_TYPES.indexOf(this.currentPiece.type) + 1;
             }
         }
