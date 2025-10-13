@@ -3,6 +3,7 @@ import { renderAPI } from '../../renderer/renderAPI';
 import { GameAction } from './actions';
 import { setupKeyboardControls } from './keyboard';
 import { setupTouchControls } from './touch';
+import { setupGamepadControls } from './gamepad';
 
 /**
  * Manages all user input sources (keyboard, gamepad, touch) and funnels
@@ -11,8 +12,7 @@ import { setupTouchControls } from './touch';
 export class InputManager {
     private cleanupKeyboard: () => void;
     private cleanupTouch: () => void;
-    // Future input method cleanup functions will be added here
-    // private cleanupGamepad: () => void;
+    private cleanupGamepad: () => void;
 
     constructor() {
         /**
@@ -30,8 +30,8 @@ export class InputManager {
         // Initialize touch controls and store its cleanup function
         this.cleanupTouch = setupTouchControls(actionHandler);
 
-        // Future input methods will be initialized here
-        // this.cleanupGamepad = setupGamepadControls(actionHandler);
+        // Initialize gamepad controls and store its cleanup function
+        this.cleanupGamepad = setupGamepadControls(actionHandler);
     }
 
     /**
@@ -50,7 +50,7 @@ export class InputManager {
     public disable() {
         this.cleanupKeyboard();
         this.cleanupTouch();
-        // this.cleanupGamepad();
+        this.cleanupGamepad();
         console.log("InputManager: All controls disabled.");
     }
 }

@@ -2,10 +2,12 @@
 import { PixiRenderer } from './renderer/pixiRenderer';
 import { InputManager } from './ui/input/InputManager';
 import { UIStateManager, UIState } from './ui/state';
+import { AccessibilityManager } from './ui/accessibility';
 
 async function main() {
     const uiManager = new UIStateManager();
     const inputManager = new InputManager();
+    const accessibilityManager = new AccessibilityManager(document.body);
     let renderer: PixiRenderer | null = null;
 
     const startGame = async () => {
@@ -23,8 +25,9 @@ async function main() {
             container.removeChild(container.firstChild);
         }
 
-        renderer = await PixiRenderer.create(container, uiManager);
+        renderer = await PixiRenderer.create(container, uiManager, accessibilityManager);
         renderer.start();
+        accessibilityManager.announce('Game started.');
         console.log('Game started.');
     };
 
@@ -53,14 +56,17 @@ async function main() {
             renderer = null;
         }
         uiManager.changeState(UIState.MainMenu);
+        accessibilityManager.announce('Game over. Main menu.');
     });
 
     settingsButton.addEventListener('click', () => {
         uiManager.changeState(UIState.Settings);
+        accessibilityManager.announce('Settings menu.');
     });
 
     backButton.addEventListener('click', () => {
         uiManager.changeState(UIState.MainMenu);
+        accessibilityManager.announce('Main menu.');
     });
 
     const updateTimings = () => {
@@ -80,3 +86,4 @@ async function main() {
 document.addEventListener('DOMContentLoaded', () => {
     main().catch(console.error);
 });
+

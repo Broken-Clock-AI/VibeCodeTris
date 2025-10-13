@@ -62,9 +62,10 @@ The following tasks are now the **immediate priority**:
 - [x] **Task:** Implement touch controls (Button-First Hybrid)
     - [x] **Sub-task:** Add on-screen virtual buttons for all primary actions (Move, Rotate, Hard Drop, Hold).
     - [x] **Sub-task:** Implement optional swipe gestures for movement and soft drop.
+- [x] **Task:** Implement gamepad controls (`gamepad.ts`)
 
 ### Epic: Accessibility
-- [ ] **Task:** Implement HUD for screen readers (`accessibility.ts`)
+- [x] **Task:** Implement HUD for screen readers (`accessibility.ts`)
 
 ## Phase 4: Verification, Tooling & Polish
 

@@ -5,6 +5,17 @@ This file tracks the build and development process.
 **Commit: `[Will be generated]`**
 *   **Date:** 2025-10-13
 *   **Author:** Gemini
+*   **Summary:** `feat(controls): Implement full gamepad support`
+*   **Details:**
+    *   Created a new `gamepad.ts` module to handle input from connected gamepads.
+    *   Implemented a polling loop using `requestAnimationFrame` to monitor gamepad button states for maximum performance and compatibility.
+    *   Mapped standard gamepad buttons (D-pad, face buttons) to in-game actions.
+    *   Correctly implemented press and release events to fully support the engine's DAS/ARR (auto-repeat) mechanics.
+    *   Seamlessly integrated the gamepad module into the main `InputManager`, making it a first-class input method alongside keyboard and touch.
+
+**Commit: `[Will be generated]`**
+*   **Date:** 2025-10-13
+*   **Author:** Gemini
 *   **Summary:** `fix(controls): Resolve critical bug in touch swipe gestures`
 *   **Details:**
     *   Diagnosed and fixed a critical bug where swipe gestures for movement (`moveLeft`, `moveRight`, `softDrop`) would cause the piece to move perpetually.

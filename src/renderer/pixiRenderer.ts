@@ -2,8 +2,9 @@
 import * as PIXI from 'pixi.js';
 import { renderAPI } from './renderAPI';
 import { COLS, ROWS } from '../logic/constants';
-import { Snapshot } from '../logic/types';
+import { GameEvent, Snapshot } from '../logic/types';
 import { UIStateManager, UIState } from '../ui/state';
+import { AccessibilityManager } from '../ui/accessibility';
 
 const BLOCK_SIZE = 30;
 const BORDER_WIDTH = 2;
@@ -26,15 +27,22 @@ export class PixiRenderer {
     private boardContainer: PIXI.Container;
     private boardBlocks: PIXI.Graphics[] = [];
     private uiManager: UIStateManager;
+    private accessibilityManager: AccessibilityManager;
+    private lastAnnouncedLevel: number = 1;
 
-    private constructor(uiManager: UIStateManager) {
+    private constructor(uiManager: UIStateManager, accessibilityManager: AccessibilityManager) {
         this.app = new PIXI.Application();
         this.boardContainer = new PIXI.Container();
         this.uiManager = uiManager;
+        this.accessibilityManager = accessibilityManager;
     }
 
-    public static async create(container: HTMLElement, uiManager: UIStateManager): Promise<PixiRenderer> {
-        const renderer = new PixiRenderer(uiManager);
+    public static async create(
+        container: HTMLElement, 
+        uiManager: UIStateManager, 
+        accessibilityManager: AccessibilityManager
+    ): Promise<PixiRenderer> {
+        const renderer = new PixiRenderer(uiManager, accessibilityManager);
         await renderer.app.init({
             width: BOARD_WIDTH,
             height: BOARD_HEIGHT,
@@ -61,6 +69,27 @@ export class PixiRenderer {
         }
     }
 
+    private handleGameEvents(events: GameEvent[]) {
+        for (const event of events) {
+            switch (event.type) {
+                case 'lineClear':
+                    const count = event.data.count;
+                    if (count === 1) this.accessibilityManager.announce('Single line clear.');
+                    else if (count === 2) this.accessibilityManager.announce('Double line clear.');
+                    else if (count === 3) this.accessibilityManager.announce('Triple line clear.');
+                    else if (count >= 4) this.accessibilityManager.announce('Tetris!');
+                    break;
+                case 'scoreUpdate':
+                    if (event.data.level > this.lastAnnouncedLevel) {
+                        this.lastAnnouncedLevel = event.data.level;
+                        this.accessibilityManager.announce(`Level up to level ${this.lastAnnouncedLevel}.`);
+                    }
+                    break;
+                // Other event announcements can be added here
+            }
+        }
+    }
+
     private setupSubscriptions() {
         renderAPI.on('snapshot', (snapshot) => {
             if (snapshot.gameOver) {
@@ -73,6 +102,7 @@ export class PixiRenderer {
                 return;
             }
             this.drawBoard(snapshot);
+            this.handleGameEvents(snapshot.events);
         });
 
         renderAPI.on('log', (log) => {
