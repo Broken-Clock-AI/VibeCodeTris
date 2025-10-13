@@ -163,4 +163,14 @@ export class PixiRenderer {
         renderAPI.destroy();
         this.app.destroy(true, { children: true, texture: true });
     }
+
+    public resize(width: number, height: number) {
+        this.app.renderer.resize(width, height);
+        
+        const scaleX = width / BOARD_WIDTH;
+        const scaleY = height / BOARD_HEIGHT;
+        const scale = Math.min(scaleX, scaleY);
+
+        this.boardContainer.scale.set(scale);
+    }
 }

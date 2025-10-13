@@ -5,13 +5,21 @@ This file tracks the build and development process.
 **Commit: `[Will be generated]`**
 *   **Date:** 2025-10-13
 *   **Author:** Gemini
-*   **Summary:** `feat(controls): Implement full gamepad support`
+*   **Summary:** `fix(layout): Implement fully responsive, fit-to-screen UI`
 *   **Details:**
-    *   Created a new `gamepad.ts` module to handle input from connected gamepads.
-    *   Implemented a polling loop using `requestAnimationFrame` to monitor gamepad button states for maximum performance and compatibility.
-    *   Mapped standard gamepad buttons (D-pad, face buttons) to in-game actions.
-    *   Correctly implemented press and release events to fully support the engine's DAS/ARR (auto-repeat) mechanics.
-    *   Seamlessly integrated the gamepad module into the main `InputManager`, making it a first-class input method alongside keyboard and touch.
+    *   Overhauled the application's CSS and resize logic to create a robust, responsive layout that works on both mobile and desktop.
+    *   Fixed a critical bug where mobile browser UI would overlap and hide the game's touch controls. The layout now uses `window.innerHeight` to dynamically adapt to the true visible viewport.
+    *   Fixed an issue where "black gutters" would appear around the game board. The game container is now resized via JavaScript to perfectly match the canvas aspect ratio.
+    *   Implemented CSS media queries to ensure the on-screen touch controls are only visible on mobile/touch devices, providing a clean interface for desktop users.
+    *   The application is now fully responsive and scales correctly on all target devices without scrolling.
+
+**Commit: `[Will be generated]`**
+*   **Date:** 2025-10-13
+*   **Author:** Gemini
+*   **Summary:** `feat(ui): Implement gamepad controls and accessibility HUD`
+*   **Details:**
+    *   **Gamepad Controls:** Created a new `gamepad.ts` module using the browser's Gamepad API to provide full controller support. The implementation uses a `requestAnimationFrame` polling loop for performance and correctly handles press/release events to support DAS/ARR. The module was integrated into the `InputManager`.
+    *   **Accessibility HUD:** Created a new `accessibility.ts` module to provide screen reader support. It generates a visually hidden ARIA live region that announces key game events. The `AccessibilityManager` was integrated into `main.ts` and the `PixiRenderer` to announce UI state changes (e.g., "Game Over") and in-game events (e.g., "Double line clear," "Level up").
 
 **Commit: `[Will be generated]`**
 *   **Date:** 2025-10-13

@@ -1,7 +1,8 @@
-# Project To--Do List
+# Project To-Do List
 
 ---
 ### **High Priority Issues**
+- [x] **Task:** Fix responsive layout for mobile and desktop.
 - [x] **Task:** Fix unresponsive player controls.
 - [x] **Task:** Fix critical bug in touch controls causing perpetual movement.
 ---

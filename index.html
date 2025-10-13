@@ -5,17 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>VibeCodeTris</title>
     <style>
-        body {
+        html, body {
+            height: 100vh;
             margin: 0;
             padding: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #121212;
+            font-family: sans-serif;
+            color: white;
+        }
+        #app-container {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #121212;
-            font-family: sans-serif;
-            color: white;
+            width: 100%;
+            height: 100%;
+            max-width: 400px; /* Max width for larger screens */
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        /* Make view containers take full height */
+        #app-container > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        /* Specific layout for the in-game screen */
+        #in-game {
+            justify-content: space-between;
         }
         .hidden {
             display: none !important;
@@ -23,34 +49,23 @@
         #game-container {
             border: 2px solid #fff;
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 0; /* Fix flexbox overflow issue */
         }
+
+        #game-container canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Hide touch controls by default */
         #touch-controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 10px;
-            width: 300px; /* Match game width */
-            margin-top: 20px;
+            display: none;
         }
-        .touch-button {
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            color: white;
-            font-size: 1.2em;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            user-select: none; /* Prevent text selection */
-        }
-        .touch-button:active {
-            background-color: rgba(255, 255, 255, 0.4);
-        }
-        #btn-rot-ccw { grid-column: 1; grid-row: 1; }
-        #btn-hard-drop { grid-column: 2; grid-row: 1; }
-        #btn-rot-cw { grid-column: 3; grid-row: 1; }
-        #btn-move-left { grid-column: 1; grid-row: 2; }
-        #btn-hold { grid-column: 2; grid-row: 2; }
-        #btn-move-right { grid-column: 3; grid-row: 2; }
 
         /* Styles for menu buttons */
         .menu-button {
@@ -66,6 +81,41 @@
         .menu-button:hover {
             background-color: #444;
             border-color: #777;
+        }
+
+        /* --- Mobile & Touch Device Styles --- */
+        @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+            #touch-controls {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+                gap: 1.5vh;
+                width: 100%;
+                margin-top: 2vh;
+                flex-shrink: 0; /* Prevent controls from shrinking */
+            }
+            .touch-button {
+                background-color: rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                color: white;
+                font-size: 3.5vh; /* Slightly smaller font */
+                padding: 1.5vh;
+                text-align: center;
+                cursor: pointer;
+                user-select: none;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .touch-button:active {
+                background-color: rgba(255, 255, 255, 0.4);
+            }
+            #btn-rot-ccw { grid-column: 1; grid-row: 1; }
+            #btn-hard-drop { grid-column: 2; grid-row: 1; }
+            #btn-rot-cw { grid-column: 3; grid-row: 1; }
+            #btn-move-left { grid-column: 1; grid-row: 2; }
+            #btn-hold { grid-column: 2; grid-row: 2; }
+            #btn-move-right { grid-column: 3; grid-row: 2; }
         }
     </style>
 </head>

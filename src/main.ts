@@ -9,6 +9,47 @@ async function main() {
     const inputManager = new InputManager();
     const accessibilityManager = new AccessibilityManager(document.body);
     let renderer: PixiRenderer | null = null;
+    const gameContainer = document.getElementById('game-container');
+    const appContainer = document.getElementById('app-container');
+
+    if (!gameContainer || !appContainer) {
+        throw new Error('Core container elements not found');
+    }
+
+    const handleResize = () => {
+        // Fix mobile viewport height issue
+        document.body.style.height = `${window.innerHeight}px`;
+
+        if (!renderer) return;
+
+        // Temporarily reset container size to measure available space
+        gameContainer.style.width = '';
+        gameContainer.style.height = '';
+        
+        const containerWidth = gameContainer.clientWidth;
+        const containerHeight = gameContainer.clientHeight;
+        const aspectRatio = 1 / 2; // Width to Height
+
+        let newWidth = containerWidth;
+        let newHeight = newWidth / aspectRatio;
+
+        if (newHeight > containerHeight) {
+            newHeight = containerHeight;
+            newWidth = newHeight * aspectRatio;
+        }
+        
+        // Set container size to match canvas, eliminating gutters
+        gameContainer.style.width = `${newWidth}px`;
+        gameContainer.style.height = `${newHeight}px`;
+
+        const scale = window.devicePixelRatio;
+        
+        renderer.resize(newWidth * scale, newHeight * scale);
+        if (renderer.app.view.style) {
+            renderer.app.view.style.width = `${newWidth}px`;
+            renderer.app.view.style.height = `${newHeight}px`;
+        }
+    };
 
     const startGame = async () => {
         if (renderer) {
@@ -17,18 +58,19 @@ async function main() {
         }
         
         uiManager.changeState(UIState.InGame);
-        const container = document.getElementById('game-container');
-        if (!container) throw new Error('Game container not found');
         
-        // Clear any previous canvas
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
+        while (gameContainer.firstChild) {
+            gameContainer.removeChild(gameContainer.firstChild);
         }
 
-        renderer = await PixiRenderer.create(container, uiManager, accessibilityManager);
-        renderer.start();
-        accessibilityManager.announce('Game started.');
-        console.log('Game started.');
+        renderer = await PixiRenderer.create(gameContainer, uiManager, accessibilityManager);
+        
+        setTimeout(() => {
+            handleResize();
+            renderer.start();
+            accessibilityManager.announce('Game started.');
+            console.log('Game started.');
+        }, 50);
     };
 
     // --- Get UI Elements ---
@@ -79,6 +121,11 @@ async function main() {
 
     dasSlider.addEventListener('input', updateTimings);
     arrSlider.addEventListener('input', updateTimings);
+
+    window.addEventListener('resize', handleResize);
+    
+    // Initial resize to set body height correctly
+    handleResize();
 
     console.log('Application initialized.');
 }

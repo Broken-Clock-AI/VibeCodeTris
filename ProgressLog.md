@@ -26,11 +26,29 @@ The team has successfully completed the strategic pivot to build the foundationa
 
 ---
 
+## Recent Progress (Responsive UI Layout)
+
+A significant effort was undertaken to diagnose and fix a series of complex layout issues that affected the application on both mobile and desktop.
+
+**Key Accomplishments:**
+
+1.  **Mobile Layout Fixed:** A critical bug where the on-screen touch controls were cut off on mobile devices has been resolved.
+    *   The initial problem was diagnosed as an incorrect CSS `height` property.
+    *   Several iterative solutions were implemented, culminating in a robust "fit-to-screen" layout.
+    *   The application now uses JavaScript (`window.innerHeight`) to dynamically calculate the true available screen space, avoiding overlap from mobile browser UI elements.
+
+2.  **Desktop Layout Fixed:** An issue where the mobile touch controls were incorrectly displayed on desktop has been resolved.
+    *   CSS media queries have been implemented to ensure touch controls are *only* visible on touch-enabled devices or narrow viewports.
+
+3.  **Unified Scaling Logic:** The game canvas and its surrounding border now scale perfectly on all devices.
+    *   The resizing logic was made aspect-ratio-aware.
+    *   JavaScript now dynamically resizes the game's container to match the canvas, eliminating the "black gutter" artifacts and ensuring the border is always snug.
+
+The application's layout is now stable and responsive across all target platforms.
+
+---
+
 ## Current Known Issues
 
-### 1. Player Controls Unresponsive
-
-*   **Symptom:** All player controls (move left/right, rotate, drop, etc.) have stopped working. The game starts, but the piece cannot be controlled.
-*   **Suspected Cause:** The refactoring of the `renderAPI.sendInput` method and the worker's message handler to support the new `setTimings` action object (`{ type: 'setTimings', ... }`) has likely introduced a mismatch in how standard string-based actions (e.g., `'moveLeft'`) are processed. The worker is likely no longer receiving these simple actions in the expected format.
-*   **Next Step:** The immediate priority is to debug the input handling pipeline from `InputManager` -> `renderAPI` -> `worker.ts` to ensure the data format for player actions is consistent.
+There are no high-priority known issues at this time.
 
