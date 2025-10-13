@@ -46,10 +46,9 @@ This to-do list is generated from the `Tasklist.csv` and tracks the development 
 
 ### Epic: UI
 - [x] **Task:** Implement keyboard controls (`controls.tsx`)
-- [ ] **Task:** Implement touch controls (`touch.ts`)
-    - [ ] **Sub-task:** Implement swipe gestures for movement and dropping.
-    - [ ] **Sub-task:** Implement tap gestures for rotation.
-    - [ ] **Sub-task:** Add on-screen button for hold action.
+- [x] **Task:** Implement touch controls (Button-First Hybrid)
+    - [x] **Sub-task:** Add on-screen virtual buttons for all primary actions (Move, Rotate, Hard Drop, Hold).
+    - [x] **Sub-task:** Implement optional swipe gestures for movement and soft drop.
 
 ### Epic: Accessibility
 - [ ] **Task:** Implement HUD for screen readers (`accessibility.ts`)
@@ -61,6 +60,7 @@ This to-do list is generated from the `Tasklist.csv` and tracks the development 
 
 ### Epic: Tests (Phase 4)
 - [ ] **Task:** Integration/golden tests for replay (`/tests/integration`)
+- [ ] **Task:** Add UI customization for touch controls.
 
 ## Post-MVP (Optional)
 

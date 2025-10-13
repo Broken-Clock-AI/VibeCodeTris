@@ -2,27 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>VibeCodeTris</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column; /* Arrange items vertically */
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #121212;
             font-family: sans-serif;
+            color: white;
         }
         #game-container {
             border: 2px solid #fff;
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
         }
+        #touch-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            width: 300px; /* Match game width */
+            margin-top: 20px;
+        }
+        .touch-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            font-size: 1.2em;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none; /* Prevent text selection */
+        }
+        .touch-button:active {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        #btn-rot-ccw { grid-column: 1; grid-row: 1; }
+        #btn-hard-drop { grid-column: 2; grid-row: 1; }
+        #btn-rot-cw { grid-column: 3; grid-row: 1; }
+        #btn-move-left { grid-column: 1; grid-row: 2; }
+        #btn-hold { grid-column: 2; grid-row: 2; }
+        #btn-move-right { grid-column: 3; grid-row: 2; }
     </style>
 </head>
 <body>
     <div id="game-container"></div>
+    <div id="touch-controls">
+        <div id="btn-rot-ccw" class="touch-button">↶</div>
+        <div id="btn-hard-drop" class="touch-button">▼▼</div>
+        <div id="btn-rot-cw" class="touch-button">↷</div>
+        <div id="btn-move-left" class="touch-button">◄</div>
+        <div id="btn-hold" class="touch-button">Hold</div>
+        <div id="btn-move-right" class="touch-button">►</div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

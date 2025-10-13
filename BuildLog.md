@@ -5,14 +5,15 @@ This file tracks the build and development process.
 **Commit: `[Will be generated]`**
 *   **Date:** 2025-10-12
 *   **Author:** Gemini
-*   **Summary:** `fix(core): Implement and debug keyboard controls`
+*   **Summary:** `fix(controls): Implement and debug keyboard and touch controls`
 *   **Details:**
-    *   Implemented a modular `InputManager` to handle all user input, starting with keyboard controls.
+    *   Implemented a modular `InputManager` to handle all user input, including both keyboard and touch.
+    *   Added a complete hybrid touch control system (`touch.ts`) with support for on-screen virtual buttons and swipe gestures.
     *   Traced a critical bug where controls were unresponsive back to the application's entry point.
     *   Corrected `index.html` to load the main application script (`main.ts`) instead of the renderer script directly.
     *   Fixed a `SyntaxError` by exporting the `PixiRenderer` class and removing duplicated startup logic from its file.
     *   Refactored the application startup in `main.ts` to be robust and wait for the DOM to be fully loaded.
-    *   The keyboard controls are now fully functional, and all 13 unit and integration tests are passing.
+    *   The keyboard and touch controls are now fully functional, and all 13 unit and integration tests are passing.
 
 **Commit: `[Will be generated]`**
 *   **Date:** 2025-10-10

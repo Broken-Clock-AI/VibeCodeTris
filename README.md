@@ -2,6 +2,19 @@
 
 This repository contains the source code for a fully deterministic, worker-authoritative Tetris engine built with TypeScript. The project prioritizes determinism, replayability, and a clean separation between game logic and rendering.
 
+---
+## Current Status (As of October 2025)
+
+The project is currently in the middle of **Phase 3**.
+
+*   ✅ **Phase 1: Core Engine** - Complete. The deterministic logic is fully implemented and unit-tested.
+*   ✅ **Phase 2: Worker Layer** - Complete. The engine runs successfully in a resilient web worker.
+*   🚧 **Phase 3: Renderer & UI** - In Progress. A functional PixiJS renderer is implemented, along with complete keyboard and touch controls.
+*   ⏳ **Phase 4: Tooling & Polish** - Not Started.
+
+The application is in a stable, playable state. See the `ToDoList.md` for a detailed breakdown of pending tasks.
+
+---
 ## Project Purpose
 
 To build a fully deterministic, worker-authoritative Tetris engine (TypeScript) with:
