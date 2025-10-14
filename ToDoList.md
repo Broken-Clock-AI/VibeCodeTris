@@ -50,6 +50,20 @@ The following tasks are now the **immediate priority**:
 
 ---
 
+### **Phase 3.5: Visual Accessibility Foundation**
+
+**This is the current, active development phase.** For a detailed breakdown, see `VisualAccessibilityProposal.md`.
+
+- [ ] **Task:** Extend the `UIStateManager` to manage detailed visual settings.
+- [ ] **Task:** Add UI controls (checkboxes, dropdown) for new visual options to `index.html`.
+- [ ] **Task:** Connect new UI controls to the `UIStateManager` in `main.ts`.
+- [ ] **Task:** Refactor the `PixiRenderer` to be driven by the new visual settings state.
+- [ ] **Task:** Implement dynamic color palette switching in the renderer.
+- [ ] **Task:** Implement texture generation for distinct piece patterns in the renderer.
+- [ ] **Task:** Implement high-contrast mode in the renderer.
+
+---
+
 ## Phase 3: The Renderer & User Interface
 
 ### Epic: Renderer

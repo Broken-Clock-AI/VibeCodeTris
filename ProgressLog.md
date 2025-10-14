@@ -1,8 +1,24 @@
 # Progress Log
 
-**Date:** 2025-10-13
+**Date:** 2025-10-14
 
 This document tracks the recent development progress and current known issues.
+
+---
+
+## New Initiative: Visual Accessibility Foundation
+
+**Date:** 2025-10-14
+
+With the core application and UI shell now stable, the project is beginning a new strategic initiative focused on implementing high-impact, blendable visual accessibility features.
+
+**Key Goals:**
+
+1.  **Centralize State:** Refactor the `UIStateManager` to manage fine-grained visual settings, creating a single source of truth.
+2.  **Implement UI Controls:** Add user-facing controls to the Settings menu for new visual options.
+3.  **Enhance the Renderer:** Modify the `PixiRenderer` to be driven by the new state, allowing it to dynamically render different color palettes, high-contrast visuals, and distinct piece patterns.
+
+This work is guided by the detailed plan in `VisualAccessibilityProposal.md` and is tracked in `ToDoList.md` under the "Phase 3.5" heading.
 
 ---
 

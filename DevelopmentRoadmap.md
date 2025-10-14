@@ -1,42 +1,32 @@
-# Development Roadmap: Pivoting to UI Scaffolding
+# Development Roadmap: Visual Accessibility Foundation
 
-**Date:** 2025-10-13
+**Date:** 2025-10-14
 
-## Strategic Pivot
+## Strategic Initiative
 
-The project has reached a critical inflection point. The core deterministic engine and the input control systems (keyboard and touch) are robust and complete. However, many of the remaining high-priority tasks in both the `ToDoList.md` and `Accessibility.md` plan require a user interface (UI) to host them (e.g., a settings menu, a game over screen).
+With the core UI shell and engine complete, the project's primary focus is now on implementing high-impact visual accessibility features. This initiative will create a radically different and customizable user experience by adding blendable options for color palettes, high-contrast rendering, and distinct piece patterns.
 
-The current codebase lacks this foundational UI "shell." To unblock all future UI-related development, we are temporarily pivoting from implementing in-game features to building the necessary application-level UI structure.
-
-This document outlines the new, sequential development priorities.
+This plan is derived from the detailed `VisualAccessibilityProposal.md` document.
 
 ---
 
-## The Unblocked Development Path
+## The Implementation Path
 
-### Step 1: Implement "Game Over" Logic (Engine Task)
+### Step 1: Extend the State Manager (`src/ui/state.ts`)
 
-*   **What:** Add the core logic to `engine.ts` to detect a "game over" condition. This occurs when a new piece cannot be spawned in the starting position without an immediate collision. The engine must stop its game loop and report a `gameOver` state in its snapshot or via a dedicated event.
-*   **Why:** This is the final critical piece of the core game loop. The UI needs to be aware of this state to transition to a "Game Over" screen.
+*   **What:** Architect a centralized place to store and manage visual settings. This involves creating a `VisualSettings` interface, adding it to the `UIStateManager`, and implementing a simple pub/sub system to notify other modules of changes.
+*   **Why:** This is the most critical architectural change. It moves settings management out of direct DOM reads and into a clean, scalable state management pattern, which is essential for keeping the renderer and UI synchronized.
 
-### Step 2: Create a Basic UI State Manager
+### Step 2: Update the UI (`index.html` and `main.ts`)
 
-*   **What:** Implement a simple state management system on the main thread (`main.ts` or a new `ui/state.ts`). This system will be responsible for switching between different application views, such as `MainMenu`, `InGame`, `Settings`, and `GameOver`. The initial implementation can manage the visibility of different `<div>` containers in `index.html`.
-*   **Why:** This provides the foundational scaffolding for all subsequent UI work. It is the most important blocker to clear.
+*   **What:** Add the new UI controls to the existing Settings screen. This includes a `<select>` dropdown for color palettes and two `<input type="checkbox">` elements for High-Contrast Mode and Distinct Piece Patterns. Event listeners will be added in `main.ts` to connect these controls to the `UIStateManager`.
+*   **Why:** This provides the necessary user-facing controls and wires them into our new state management system.
 
-### Step 3: Build the "Game Over" and Settings Menu UI
+### Step 3: Modify the PixiJS Renderer (`src/renderer/pixiRenderer.ts`)
 
-*   **What:** Create the basic HTML and CSS for a "Game Over" screen and a "Settings" screen. The "Game Over" screen should include the final score and a "Play Again" button. The "Settings" screen will be a placeholder container for future options. Wire these views into the state manager from Step 2.
-*   **Why:** This creates the physical locations required to display game results and add the accessibility toggles planned in the accessibility roadmap.
-
-### Step 4: Implement the First "Tier 1" Accessibility Option
-
-*   **What:** With the settings menu in place, implement the first high-impact accessibility feature. The top candidate is adding UI controls (e.g., sliders or input fields) to modify the **Adjustable DAS/ARR** values. This will involve:
-    1.  Adding the controls to the Settings UI.
-    2.  Sending the updated values to the engine.
-    3.  Ensuring the engine correctly applies the new timings.
-*   **Why:** This delivers the first feature from our accessibility plan and validates the entire UI-to-engine pipeline, proving that our new UI structure is working correctly.
-
----
-
-This roadmap will be followed to ensure that we build the necessary foundations before proceeding with more granular feature implementation.
+*   **What:** Refactor the renderer to be driven by the new visual settings state. This involves:
+    1.  Subscribing to state changes from the `UIStateManager`.
+    2.  Replacing the hardcoded `COLORS` array with a dynamic theme manager.
+    3.  Implementing a texture generation and caching system for the "Distinct Piece Patterns" feature.
+    4.  Updating the `drawBoard` logic to conditionally apply the correct colors, textures, and contrast settings based on the current state.
+*   **Why:** This is the final step where the visual changes are actually implemented, making the renderer a stateless slave to the central settings.

@@ -5,12 +5,12 @@ This repository contains the source code for a fully deterministic, worker-autho
 ---
 ## Current Status (As of October 2025)
 
-The project is currently in the middle of **Phase 3**.
+The project is currently at the beginning of **Phase 4**.
 
 *   ✅ **Phase 1: Core Engine** - Complete. The deterministic logic is fully implemented and unit-tested.
 *   ✅ **Phase 2: Worker Layer** - Complete. The engine runs successfully in a resilient web worker.
-*   🚧 **Phase 3: Renderer & UI** - In Progress. A functional PixiJS renderer is implemented, along with complete keyboard and touch controls.
-*   ⏳ **Phase 4: Tooling & Polish** - Not Started.
+*   ✅ **Phase 3: Renderer & UI** - Complete. A functional PixiJS renderer is implemented, along with a fully responsive UI with keyboard, touch, and gamepad controls.
+*   🚧 **Phase 4: Tooling & Polish** - In Progress.
 
 The application is in a stable, playable state. See the `ToDoList.md` for a detailed breakdown of pending tasks.
 
@@ -52,13 +52,11 @@ This design ensures that the game logic is never blocked by rendering or other m
 
 ## Project Structure
 
-This is the complete forecast of all files that will be generated to deliver the project.
-
-`
 .
 ├── index.html
 ├── vite.config.ts
 └── src
+    ├── main.ts
     ├── logic
     │   ├── constants.ts
     │   ├── engine.ts
@@ -69,25 +67,23 @@ This is the complete forecast of all files that will be generated to deliver the
     │   └── worker.ts
     ├── renderer
     │   ├── pixiRenderer.ts
-    │   ├── renderAPI.ts
-    │   └── shaders/
-    │       └── (Optional post-MVP files like bloom.glsl)
+    │   └── renderAPI.ts
     ├── tests
     │   ├── integration
-    │   │   ├── replay.test.ts
     │   │   └── worker.test.ts
     │   └── unit
     │       ├── engine.test.ts
-    │       ├── recover.test.ts
     │       ├── rng.test.ts
     │       └── rules.test.ts
-    ├── tools
-    │   └── replayPlayer.ts
     └── ui
         ├── accessibility.ts
-        ├── controls.tsx
-        └── settings.tsx
-`
+        ├── state.ts
+        └── input
+            ├── actions.ts
+            ├── gamepad.ts
+            ├── InputManager.ts
+            ├── keyboard.ts
+            └── touch.ts
 
 ---
 
