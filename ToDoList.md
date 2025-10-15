@@ -54,13 +54,13 @@ The following tasks are now the **immediate priority**:
 
 **This is the current, active development phase.** For a detailed breakdown, see `VisualAccessibilityProposal.md`.
 
-- [ ] **Task:** Extend the `UIStateManager` to manage detailed visual settings.
-- [ ] **Task:** Add UI controls (checkboxes, dropdown) for new visual options to `index.html`.
-- [ ] **Task:** Connect new UI controls to the `UIStateManager` in `main.ts`.
-- [ ] **Task:** Refactor the `PixiRenderer` to be driven by the new visual settings state.
-- [ ] **Task:** Implement dynamic color palette switching in the renderer.
-- [ ] **Task:** Implement texture generation for distinct piece patterns in the renderer.
-- [ ] **Task:** Implement high-contrast mode in the renderer.
+- [x] **Task:** Extend the `UIStateManager` to manage detailed visual settings.
+- [x] **Task:** Add UI controls (checkboxes, dropdown) for new visual options to `index.html`.
+- [x] **Task:** Connect new UI controls to the `UIStateManager` in `main.ts`.
+- [x] **Task:** Refactor the `PixiRenderer` to be driven by the new visual settings state.
+- [x] **Task:** Implement dynamic color palette switching in the renderer.
+- [x] **Task:** Implement texture generation for distinct piece patterns in the renderer.
+- [x] **Task:** Implement high-contrast mode in the renderer.
 
 ---
 

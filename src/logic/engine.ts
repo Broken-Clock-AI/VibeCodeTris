@@ -15,15 +15,6 @@ const PIECE_SHAPES = {
   T: [[0, 1, 0], [1, 1, 1], [0, 0, 0]],
   Z: [[1, 1, 0], [0, 1, 1], [0, 0, 0]],
 };
-const PIECE_COLORS = {
-    I: 0x00FFFF, // Cyan
-    J: 0x0000FF, // Blue
-    L: 0xFFA500, // Orange
-    O: 0xFFFF00, // Yellow
-    S: 0x00FF00, // Green
-    T: 0x800080, // Purple
-    Z: 0xFF0000, // Red
-};
 
 
 export class TetrisEngine {
@@ -34,7 +25,7 @@ export class TetrisEngine {
 
   // --- Piece and Bag State ---
   private bag: string[];
-  private currentPiece: { type: string; matrix: number[][]; x: number; y: number; rotation: number; color: number; } | null;
+  private currentPiece: { type: string; matrix: number[][]; x: number; y: number; rotation: number; colorIndex: number; } | null;
   private holdType: number;
   private nextTypes: Uint8Array;
 
@@ -398,7 +389,7 @@ export class TetrisEngine {
     this.updateNextTypes();
 
     const matrix = PIECE_SHAPES[type as keyof typeof PIECE_SHAPES];
-    const color = PIECE_COLORS[type as keyof typeof PIECE_COLORS];
+    const colorIndex = PIECE_TYPES.indexOf(type) + 1;
     
     this.currentPiece = {
         type,
@@ -406,7 +397,7 @@ export class TetrisEngine {
         x: Math.floor(COLS / 2) - Math.ceil(matrix[0].length / 2),
         y: 0,
         rotation: 0,
-        color,
+        colorIndex,
     };
 
     if (!isValidPosition(this.currentPiece.matrix, this.currentPiece.x, this.currentPiece.y, this.board)) {

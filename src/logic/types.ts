@@ -51,7 +51,7 @@ export type Snapshot = {
     x: number;
     y: number;
     rotation: number;
-    color: number;
+    colorIndex: number;
   } | null;
   nextTypes: Uint8Array;
   holdType: number;

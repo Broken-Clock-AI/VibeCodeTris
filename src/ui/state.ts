@@ -7,9 +7,23 @@ export enum UIState {
     GameOver,
 }
 
+export interface VisualSettings {
+    colorPalette: 'default' | 'deuteranopia' | 'protanopia' | 'tritanopia';
+    highContrast: boolean;
+    distinctPatterns: boolean;
+    pieceOutline: boolean;
+}
+
 export class UIStateManager {
     private currentState: UIState;
     private viewElements: Map<UIState, HTMLElement>;
+    private visualSettings: VisualSettings = {
+        colorPalette: 'default',
+        highContrast: false,
+        distinctPatterns: false,
+        pieceOutline: false,
+    };
+    private subscribers: ((settings: VisualSettings) => void)[] = [];
 
     constructor() {
         this.currentState = UIState.MainMenu;
@@ -55,5 +69,19 @@ export class UIStateManager {
                 element.classList.add('hidden');
             }
         }
+    }
+
+    public getVisualSettings(): VisualSettings {
+        return this.visualSettings;
+    }
+
+    public updateVisualSettings(newSettings: Partial<VisualSettings>): void {
+        this.visualSettings = { ...this.visualSettings, ...newSettings };
+        this.subscribers.forEach(cb => cb(this.visualSettings));
+    }
+
+    public subscribeToVisualSettings(callback: (settings: VisualSettings) => void): void {
+        this.subscribers.push(callback);
+        callback(this.visualSettings); // Immediately notify with current state
     }
 }

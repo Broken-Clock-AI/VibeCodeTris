@@ -3,6 +3,17 @@
 This file tracks the build and development process.
 
 **Commit: `[Will be generated]`**
+*   **Date:** 2025-10-15
+*   **Author:** Gemini
+*   **Summary:** `fix(renderer): Resolve critical bug causing invisible falling pieces`
+*   **Details:**
+    *   Diagnosed and fixed a critical rendering bug where the falling piece was invisible across all color palettes except the default.
+    *   The root cause was a data inconsistency: the `TetrisEngine` was sending a hardcoded hex color value for the current piece, while the `PixiRenderer` expected a `colorIndex` to use with its theming system.
+    *   The fix involved refactoring the engine to send a `colorIndex` instead, making the current piece's data consistent with the locked pieces on the board.
+    *   The shared `Snapshot` type in `types.ts` was updated to reflect this change.
+    *   The color palettes and all related visual accessibility features now function correctly.
+
+**Commit: `[Will be generated]`**
 *   **Date:** 2025-10-13
 *   **Author:** Gemini
 *   **Summary:** `fix(layout): Implement fully responsive, fit-to-screen UI`

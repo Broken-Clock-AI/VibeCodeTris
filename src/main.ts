@@ -1,7 +1,7 @@
 // src/main.ts
 import { PixiRenderer } from './renderer/pixiRenderer';
 import { InputManager } from './ui/input/InputManager';
-import { UIStateManager, UIState } from './ui/state';
+import { UIStateManager, UIState, VisualSettings } from './ui/state';
 import { AccessibilityManager } from './ui/accessibility';
 
 async function main() {
@@ -83,8 +83,12 @@ async function main() {
     const arrSlider = document.getElementById('arr-slider') as HTMLInputElement;
     const dasValue = document.getElementById('das-value');
     const arrValue = document.getElementById('arr-value');
+    const colorPaletteSelect = document.getElementById('color-palette-select') as HTMLSelectElement;
+    const highContrastCheckbox = document.getElementById('high-contrast-checkbox') as HTMLInputElement;
+    const distinctPatternsCheckbox = document.getElementById('distinct-patterns-checkbox') as HTMLInputElement;
+    const pieceOutlineCheckbox = document.getElementById('piece-outline-checkbox') as HTMLInputElement;
 
-    if (!playButton || !settingsButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue) {
+    if (!playButton || !settingsButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox) {
         throw new Error('One or more UI elements not found');
     }
 
@@ -121,6 +125,22 @@ async function main() {
 
     dasSlider.addEventListener('input', updateTimings);
     arrSlider.addEventListener('input', updateTimings);
+
+    colorPaletteSelect.addEventListener('change', () => {
+        uiManager.updateVisualSettings({ colorPalette: colorPaletteSelect.value as VisualSettings['colorPalette'] });
+    });
+
+    highContrastCheckbox.addEventListener('change', () => {
+        uiManager.updateVisualSettings({ highContrast: highContrastCheckbox.checked });
+    });
+
+    distinctPatternsCheckbox.addEventListener('change', () => {
+        uiManager.updateVisualSettings({ distinctPatterns: distinctPatternsCheckbox.checked });
+    });
+
+    pieceOutlineCheckbox.addEventListener('change', () => {
+        uiManager.updateVisualSettings({ pieceOutline: pieceOutlineCheckbox.checked });
+    });
 
     window.addEventListener('resize', handleResize);
     
