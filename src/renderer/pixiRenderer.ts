@@ -225,7 +225,7 @@ export class PixiRenderer {
     private drawBoard(snapshot: Snapshot) {
         if (!this.app.renderer) return; // Guard against calls before renderer is ready
 
-        const { colorPalette, highContrast, distinctPatterns, pieceOutline } = this.visualSettings;
+        const { colorPalette, highContrast, distinctPatterns, pieceOutline, solidPieces } = this.visualSettings;
         console.log('drawBoard pieceOutline:', pieceOutline);
         const colors = THEMES[colorPalette] || THEMES.default;
         const bgColor = highContrast ? 0x000000 : colors[0];
@@ -271,7 +271,9 @@ export class PixiRenderer {
                             block.clear();
                             block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
                             block.fill(colors[piece.colorIndex]);
-                            block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.5 });
+                            if (!solidPieces) {
+                                block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.5 });
+                            }
 
                             if (distinctPatterns && piece.colorIndex > 0) {
                                 patternSprite.texture = this.patternTextures[piece.colorIndex];
@@ -285,7 +287,9 @@ export class PixiRenderer {
             }
 
             if (pieceOutline) {
-                this.pieceOutlineContainer.lineStyle(2, 0xFFFFFF, 1); // width, color, alpha
+                this.pieceOutlineContainer.clear();
+                this.pieceOutlineContainer.setStrokeStyle({ width: 3, color: 0xFFFFFF, alpha: 1 });
+
                 for (let r = 0; r < shapeSize; r++) {
                     for (let c = 0; c < shapeSize; c++) {
                         if (matrix[r * shapeSize + c]) {
@@ -317,6 +321,9 @@ export class PixiRenderer {
                         }
                     }
                 }
+                this.pieceOutlineContainer.stroke();
+            } else {
+                this.pieceOutlineContainer.clear();
             }
         }
     }

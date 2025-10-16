@@ -82,6 +82,10 @@ The following tasks are now the **immediate priority**:
 ### Epic: Accessibility
 - [x] **Task:** Implement HUD for screen readers (`accessibility.ts`)
 
+## Phase 4: Visual Accessibility Polish
+- [x] **Task:** Implement High-Contrast Piece Outline.
+- [x] **Task:** Implement Solid Piece Shapes option.
+
 ## Phase 4: Verification, Tooling & Polish
 
 ### Epic: Replay Tool

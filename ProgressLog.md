@@ -6,6 +6,23 @@ This document tracks the recent development progress and current known issues.
 
 ---
 
+## Follow-Up Accessibility Features - **COMPLETE**
+
+**Date:** 2025-10-15
+
+Following the completion of the main accessibility initiative, two additional high-impact visual features were implemented.
+
+**Key Accomplishments:**
+
+1.  **High-Contrast Piece Outline:** A new option was added to draw a continuous, high-contrast outline around the currently falling piece.
+    *   The feature's implementation required significant debugging. The root cause of the outline not appearing was the use of deprecated Pixi.js v7 API calls (`lineStyle`, `drawRect`).
+    *   The issue was resolved by migrating the rendering logic to the modern Pixi.js v8 API (`setStrokeStyle`, `stroke`), which fixed the bug and restored visibility.
+    *   The thickness of the outline was fine-tuned to 3px for optimal visibility without being distracting.
+
+2.  **Solid Piece Shapes:** A new option was added to render the falling piece as a single, solid shape without the internal block borders. This provides a cleaner, more modern aesthetic and can improve clarity for some users.
+
+---
+
 ## New Initiative: Visual Accessibility Foundation - **COMPLETE**
 
 **Date:** 2025-10-15

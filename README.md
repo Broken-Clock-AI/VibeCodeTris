@@ -10,7 +10,7 @@ The project is currently at the beginning of **Phase 5**.
 *   ✅ **Phase 1: Core Engine** - Complete. The deterministic logic is fully implemented and unit-tested.
 *   ✅ **Phase 2: Worker Layer** - Complete. The engine runs successfully in a resilient web worker.
 *   ✅ **Phase 3: Renderer & UI** - Complete. A functional PixiJS renderer is implemented, along with a fully responsive UI with keyboard, touch, and gamepad controls.
-*   ✅ **Phase 4: Visual Accessibility** - Complete. A full suite of blendable visual accessibility options has been implemented, including colorblind palettes, high-contrast mode, and distinct piece patterns.
+*   ✅ **Phase 4: Visual Accessibility** - Complete. A full suite of blendable visual accessibility options has been implemented, including colorblind palettes, high-contrast mode, distinct piece patterns, a high-contrast piece outline, and an option for solid piece shapes.
 *   🚧 **Phase 5: Advanced Accessibility & Tooling** - In Progress.
 
 The application is in a stable, playable state. See the `ToDoList.md` for a detailed breakdown of pending tasks.

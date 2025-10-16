@@ -1,5 +1,11 @@
 # Piece Outline Implementation Plan
 
+**Status: Implemented (2025-10-15)**
+
+This feature has been successfully implemented. For details on the implementation and the debugging process (including the migration from Pixi.js v7 to v8 APIs), please see the `ProgressLog.md`.
+
+---
+
 This document outlines the technical plan for implementing a high-contrast, continuous outline around the currently falling tetromino.
 
 ## The Goal

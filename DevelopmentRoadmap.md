@@ -30,3 +30,11 @@ This plan is derived from the detailed `VisualAccessibilityProposal.md` document
     3.  Implementing a texture generation and caching system for the "Distinct Piece Patterns" feature.
     4.  Updating the `drawBoard` logic to conditionally apply the correct colors, textures, and contrast settings based on the current state.
 *   **Why:** This is the final step where the visual changes are actually implemented, making the renderer a stateless slave to the central settings.
+
+---
+## Follow-Up Features
+
+Subsequent to the main accessibility initiative, the following features were also implemented and are now complete:
+
+*   **High-Contrast Piece Outline:** Provides a configurable, continuous outline around the falling piece for better visibility.
+*   **Solid Piece Shapes:** An option to render pieces as solid colors without internal block borders for a cleaner aesthetic.

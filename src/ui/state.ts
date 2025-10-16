@@ -12,6 +12,7 @@ export interface VisualSettings {
     highContrast: boolean;
     distinctPatterns: boolean;
     pieceOutline: boolean;
+    solidPieces: boolean;
 }
 
 export class UIStateManager {
@@ -22,6 +23,7 @@ export class UIStateManager {
         highContrast: false,
         distinctPatterns: false,
         pieceOutline: false,
+        solidPieces: false,
     };
     private subscribers: ((settings: VisualSettings) => void)[] = [];
 

@@ -87,8 +87,9 @@ async function main() {
     const highContrastCheckbox = document.getElementById('high-contrast-checkbox') as HTMLInputElement;
     const distinctPatternsCheckbox = document.getElementById('distinct-patterns-checkbox') as HTMLInputElement;
     const pieceOutlineCheckbox = document.getElementById('piece-outline-checkbox') as HTMLInputElement;
+    const solidPiecesCheckbox = document.getElementById('solid-pieces-checkbox') as HTMLInputElement;
 
-    if (!playButton || !settingsButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox) {
+    if (!playButton || !settingsButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox) {
         throw new Error('One or more UI elements not found');
     }
 
@@ -140,6 +141,10 @@ async function main() {
 
     pieceOutlineCheckbox.addEventListener('change', () => {
         uiManager.updateVisualSettings({ pieceOutline: pieceOutlineCheckbox.checked });
+    });
+
+    solidPiecesCheckbox.addEventListener('change', () => {
+        uiManager.updateVisualSettings({ solidPieces: solidPiecesCheckbox.checked });
     });
 
     window.addEventListener('resize', handleResize);
