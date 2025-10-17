@@ -13,6 +13,7 @@ export interface VisualSettings {
     distinctPatterns: boolean;
     pieceOutline: boolean;
     solidPieces: boolean;
+    isGhostPieceEnabled: boolean;
 }
 
 export class UIStateManager {
@@ -24,6 +25,7 @@ export class UIStateManager {
         distinctPatterns: false,
         pieceOutline: false,
         solidPieces: false,
+        isGhostPieceEnabled: true,
     };
     private subscribers: ((settings: VisualSettings) => void)[] = [];
 

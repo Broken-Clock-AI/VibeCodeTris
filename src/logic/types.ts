@@ -50,6 +50,7 @@ export type Snapshot = {
     matrix: Uint8Array;
     x: number;
     y: number;
+    ghostY?: number;
     rotation: number;
     colorIndex: number;
   } | null;

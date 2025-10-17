@@ -225,8 +225,7 @@ export class PixiRenderer {
     private drawBoard(snapshot: Snapshot) {
         if (!this.app.renderer) return; // Guard against calls before renderer is ready
 
-        const { colorPalette, highContrast, distinctPatterns, pieceOutline, solidPieces } = this.visualSettings;
-        console.log('drawBoard pieceOutline:', pieceOutline);
+        const { colorPalette, highContrast, distinctPatterns, pieceOutline, solidPieces, isGhostPieceEnabled } = this.visualSettings;
         const colors = THEMES[colorPalette] || THEMES.default;
         const bgColor = highContrast ? 0x000000 : colors[0];
         const strokeColor = highContrast ? 0xFFFFFF : 0x333333;
@@ -257,6 +256,32 @@ export class PixiRenderer {
             const piece = snapshot.current;
             const matrix = new Uint8Array(piece.matrix);
             const shapeSize = Math.sqrt(matrix.length);
+
+            // Draw Ghost Piece first so the active piece is on top
+            if (isGhostPieceEnabled && piece.ghostY !== undefined && piece.ghostY > piece.y) {
+                for (let r = 0; r < shapeSize; r++) {
+                    for (let c = 0; c < shapeSize; c++) {
+                        if (matrix[r * shapeSize + c]) {
+                            const boardX = piece.x + c;
+                            const boardY = piece.ghostY + r;
+                            const blockIndex = boardY * COLS + boardX;
+
+                            if (blockIndex >= 0 && blockIndex < this.boardBlocks.length) {
+                                const block = this.boardBlocks[blockIndex];
+                                // Draw ghost piece with transparency
+                                block.clear();
+                                block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
+                                block.fill({ color: colors[piece.colorIndex], alpha: 0.4 });
+                                if (!solidPieces) {
+                                    block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.2 });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Draw Active Piece
             for (let r = 0; r < shapeSize; r++) {
                 for (let c = 0; c < shapeSize; c++) {
                     if (matrix[r * shapeSize + c]) {

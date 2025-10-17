@@ -408,6 +408,21 @@ export class TetrisEngine {
   }
 
   /**
+   * Calculates the final Y position of the current piece if it were dropped.
+   * @returns The Y coordinate of the ghost piece's position.
+   */
+  private calculateGhostPosition(): number {
+    if (!this.currentPiece) {
+        return -1; // Should not happen if called correctly
+    }
+    let ghostY = this.currentPiece.y;
+    while (isValidPosition(this.currentPiece.matrix, this.currentPiece.x, ghostY + 1, this.board)) {
+        ghostY++;
+    }
+    return ghostY;
+  }
+
+  /**
    * Creates a snapshot of the current game state.
    */
   private createSnapshot(): Snapshot {
@@ -446,6 +461,7 @@ export class TetrisEngine {
         current: this.currentPiece ? {
             ...this.currentPiece,
             matrix: new Uint8Array(this.currentPiece.matrix.flat()),
+            ghostY: this.calculateGhostPosition(),
         } : null,
         
         nextTypes: this.nextTypes,

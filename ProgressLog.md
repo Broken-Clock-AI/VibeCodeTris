@@ -1,8 +1,26 @@
 # Progress Log
 
-**Date:** 2025-10-15
+**Date:** 2025-10-16
 
 This document tracks the recent development progress and current known issues.
+
+---
+
+## New QoL Feature: Ghost Piece - **COMPLETE**
+
+**Date:** 2025-10-16
+
+A high-impact quality-of-life feature, the "ghost piece" (or drop preview), has been successfully implemented. This feature enhances playability and accessibility by showing a semi-transparent preview of where the current piece will land.
+
+**Key Accomplishments:**
+
+1.  **Engine Logic:** The `TetrisEngine` was updated to calculate the ghost piece's final Y-coordinate on every tick. This data is now included in the game `Snapshot`, ensuring the renderer has the necessary information without duplicating logic.
+
+2.  **State-Driven & Toggleable:** The feature is fully controlled by the `UIStateManager`. A new `isGhostPieceEnabled` flag was added to the central state, and a corresponding "Show Ghost Piece" checkbox was added to the settings menu.
+
+3.  **Conditional Rendering:** The `PixiRenderer` now conditionally renders the ghost piece. It checks both the UI state flag and the presence of the ghost piece data in the snapshot before drawing the preview with a 40% opacity, ensuring it's distinct from the active piece.
+
+4.  **Critical Bug Fix (Scope):** A `ReferenceError` was identified and fixed during validation. The renderer was attempting to use the `isGhostPieceEnabled` flag without correctly scoping it from its `visualSettings` property. The fix ensures the variable is correctly destructured, resolving the error and making the feature functional.
 
 ---
 
@@ -100,7 +118,7 @@ A significant effort was undertaken to diagnose and fix a series of complex layo
 
 3.  **Unified Scaling Logic:** The game canvas and its surrounding border now scale perfectly on all devices.
     *   The resizing logic was made aspect-ratio-aware.
-    *   JavaScript now dynamically resizes the game's container to match the canvas, eliminating the "black gutter" artifacts and ensuring the border is always snug.
+    *   JavaScript now dynamically resizes the game's container to match the canvas, a eliminating the "black gutter" artifacts and ensuring the border is always snug.
 
 The application's layout is now stable and responsive across all target platforms.
 

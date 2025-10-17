@@ -86,6 +86,9 @@ The following tasks are now the **immediate priority**:
 - [x] **Task:** Implement High-Contrast Piece Outline.
 - [x] **Task:** Implement Solid Piece Shapes option.
 
+## Phase 4: Quality of Life Features
+- [x] **Task:** Implement Ghost Piece (Drop Preview).
+
 ## Phase 4: Verification, Tooling & Polish
 
 ### Epic: Replay Tool
