@@ -84,20 +84,20 @@ async function main() {
     const dasValue = document.getElementById('das-value');
     const arrValue = document.getElementById('arr-value');
     const colorPaletteSelect = document.getElementById('color-palette-select') as HTMLSelectElement;
+    const blockStyleSelect = document.getElementById('block-style-select') as HTMLSelectElement;
     const highContrastCheckbox = document.getElementById('high-contrast-checkbox') as HTMLInputElement;
     const distinctPatternsCheckbox = document.getElementById('distinct-patterns-checkbox') as HTMLInputElement;
     const pieceOutlineCheckbox = document.getElementById('piece-outline-checkbox') as HTMLInputElement;
     const solidPiecesCheckbox = document.getElementById('solid-pieces-checkbox') as HTMLInputElement;
     const ghostPieceCheckbox = document.getElementById('ghost-piece-checkbox') as HTMLInputElement;
 
-    if (!playButton || !settingsButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox) {
+    if (!playButton || !settingsButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !blockStyleSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox) {
         throw new Error('One or more UI elements not found');
     }
 
     // --- Event Listeners ---
     playButton.addEventListener('click', startGame);
     playAgainButton.addEventListener('click', startGame);
-
     mainMenuButton.addEventListener('click', () => {
         if (renderer) {
             renderer.destroy();
@@ -106,17 +106,14 @@ async function main() {
         uiManager.changeState(UIState.MainMenu);
         accessibilityManager.announce('Game over. Main menu.');
     });
-
     settingsButton.addEventListener('click', () => {
         uiManager.changeState(UIState.Settings);
         accessibilityManager.announce('Settings menu.');
     });
-
     backButton.addEventListener('click', () => {
         uiManager.changeState(UIState.MainMenu);
         accessibilityManager.announce('Main menu.');
     });
-
     const updateTimings = () => {
         const das = parseInt(dasSlider.value, 10);
         const arr = parseInt(arrSlider.value, 10);
@@ -130,6 +127,10 @@ async function main() {
 
     colorPaletteSelect.addEventListener('change', () => {
         uiManager.updateVisualSettings({ colorPalette: colorPaletteSelect.value as VisualSettings['colorPalette'] });
+    });
+
+    blockStyleSelect.addEventListener('change', () => {
+        uiManager.updateVisualSettings({ blockStyle: blockStyleSelect.value as VisualSettings['blockStyle'] });
     });
 
     highContrastCheckbox.addEventListener('change', () => {

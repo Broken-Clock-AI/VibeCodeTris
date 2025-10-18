@@ -89,6 +89,10 @@ The following tasks are now the **immediate priority**:
 ## Phase 4: Quality of Life Features
 - [x] **Task:** Implement Ghost Piece (Drop Preview).
 
+### Epic: Visual Customization
+- [x] **Task:** Implement Custom Block Styles (Modern, Classic, NES).
+- [ ] **Task:** Implement "Faceted Gem" Block Style.
+
 ## Phase 4: Verification, Tooling & Polish
 
 ### Epic: Replay Tool

@@ -9,6 +9,7 @@ export enum UIState {
 
 export interface VisualSettings {
     colorPalette: 'default' | 'deuteranopia' | 'protanopia' | 'tritanopia';
+    blockStyle: 'modern' | 'classic' | 'nes';
     highContrast: boolean;
     distinctPatterns: boolean;
     pieceOutline: boolean;
@@ -21,6 +22,7 @@ export class UIStateManager {
     private viewElements: Map<UIState, HTMLElement>;
     private visualSettings: VisualSettings = {
         colorPalette: 'default',
+        blockStyle: 'modern',
         highContrast: false,
         distinctPatterns: false,
         pieceOutline: false,

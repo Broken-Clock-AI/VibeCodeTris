@@ -3,6 +3,18 @@
 This file tracks the build and development process.
 
 **Commit: `[Will be generated]`**
+*   **Date:** 2025-10-17
+*   **Author:** Gemini
+*   **Summary:** `feat(renderer): Implement custom block styles and fix NES style bug`
+*   **Details:**
+    *   Implemented a new "Custom Block Style" feature to allow users to change the visual appearance of the pieces.
+    *   Added a dropdown to the settings UI with three initial styles: 'Modern' (default), 'Classic' (a beveled look), and 'NES-like' (a retro theme).
+    *   The feature was integrated end-to-end, modifying the UI, the state manager, and the PixiJS renderer.
+    *   Fixed a critical rendering bug in the 'NES-like' style where the highlight glint was incorrectly drawn on empty board cells.
+    *   The fix involved passing the `colorIndex` to the `drawBlock` method and adding a conditional check, ensuring the highlight only appears on actual pieces.
+    *   The feature is now stable and fully functional.
+
+**Commit: `[Will be generated]`**
 *   **Date:** 2025-10-15
 *   **Author:** Gemini
 *   **Summary:** `fix(renderer): Resolve critical bug causing invisible falling pieces`

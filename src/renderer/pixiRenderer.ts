@@ -222,13 +222,45 @@ export class PixiRenderer {
         });
     }
 
+    private drawBlock(block: PIXI.Graphics, color: number, colorIndex: number) {
+        const { blockStyle } = this.visualSettings;
+        const { highContrast } = this.visualSettings;
+        const strokeColor = highContrast ? 0xFFFFFF : 0x333333;
+
+        block.clear();
+
+        switch (blockStyle) {
+            case 'classic':
+                const darkColor = new PIXI.Color(color).multiply(0.6).toNumber();
+                const lightColor = new PIXI.Color(color).multiply(1.4).toNumber();
+                block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE).fill(color);
+                block.moveTo(0, BLOCK_SIZE).lineTo(0, 0).lineTo(BLOCK_SIZE, 0).stroke({ width: 3, color: lightColor });
+                block.moveTo(BLOCK_SIZE, 0).lineTo(BLOCK_SIZE, BLOCK_SIZE).lineTo(0, BLOCK_SIZE).stroke({ width: 3, color: darkColor });
+                break;
+            
+            case 'nes':
+                block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE).fill(color);
+                if (colorIndex > 0) {
+                    block.rect(4, 4, 6, 6).fill(0xFFFFFF);
+                }
+                block.stroke({ width: BORDER_WIDTH, color: 0x000000, alpha: 1 });
+                break;
+
+            case 'modern':
+            default:
+                block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
+                block.fill(color);
+                block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.5 });
+                break;
+        }
+    }
+
     private drawBoard(snapshot: Snapshot) {
         if (!this.app.renderer) return; // Guard against calls before renderer is ready
 
         const { colorPalette, highContrast, distinctPatterns, pieceOutline, solidPieces, isGhostPieceEnabled } = this.visualSettings;
         const colors = THEMES[colorPalette] || THEMES.default;
         const bgColor = highContrast ? 0x000000 : colors[0];
-        const strokeColor = highContrast ? 0xFFFFFF : 0x333333;
 
         this.app.renderer.background.color = bgColor;
         this.pieceOutlineContainer.clear();
@@ -239,10 +271,7 @@ export class PixiRenderer {
             const block = this.boardBlocks[i];
             const patternSprite = this.patternSprites[i];
             
-            block.clear();
-            block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
-            block.fill(colors[colorIndex]);
-            block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.5 });
+            this.drawBlock(block, colors[colorIndex], colorIndex);
 
             if (distinctPatterns && colorIndex > 0) {
                 patternSprite.texture = this.patternTextures[colorIndex];
@@ -273,7 +302,7 @@ export class PixiRenderer {
                                 block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
                                 block.fill({ color: colors[piece.colorIndex], alpha: 0.4 });
                                 if (!solidPieces) {
-                                    block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.2 });
+                                    block.stroke({ width: BORDER_WIDTH, color: 0x333333, alpha: 0.2 });
                                 }
                             }
                         }
@@ -293,12 +322,7 @@ export class PixiRenderer {
                             const block = this.boardBlocks[blockIndex];
                             const patternSprite = this.patternSprites[blockIndex];
 
-                            block.clear();
-                            block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
-                            block.fill(colors[piece.colorIndex]);
-                            if (!solidPieces) {
-                                block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.5 });
-                            }
+                            this.drawBlock(block, colors[piece.colorIndex], piece.colorIndex);
 
                             if (distinctPatterns && piece.colorIndex > 0) {
                                 patternSprite.texture = this.patternTextures[piece.colorIndex];
