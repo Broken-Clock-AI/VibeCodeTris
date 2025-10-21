@@ -3,6 +3,27 @@
 This file tracks the build and development process.
 
 **Commit: `[Will be generated]`**
+*   **Date:** 2025-10-20
+*   **Author:** Gemini
+*   **Summary:** `fix(renderer): Correct and re-enable faceted gem style`
+*   **Details:**
+    *   **Faceted Gem Fix:** The "Faceted Gem" block style, which had been previously reverted, is now fixed and re-enabled.
+    *   The original implementation's rendering bug (blocks appearing black) was traced to incorrect manual bitwise operations for color manipulation.
+    *   The rendering logic was refactored to use the robust `PIXI.Color` class for calculating facet highlights and shadows. This resolved the color calculation errors and stabilized the feature.
+    *   The feature is now fully functional and has been re-enabled in the UI.
+
+**Commit: `[Will be generated]`**
+*   **Date:** 2025-10-18
+*   **Author:** Gemini
+*   **Summary:** `fix(renderer): Fix solid pieces rendering and revert faceted gem style`
+*   **Details:**
+    *   **Solid Pieces Fix:** Diagnosed and fixed a rendering bug where the "Solid Pieces" setting incorrectly removed the background grid. The `drawBlock` method was updated to ensure it always renders a border for empty cells (`colorIndex === 0`), restoring the grid while keeping the pieces solid.
+    *   **Faceted Gem Reversion:** The "Faceted Gem" block style, which was causing rendering issues (blocks appearing black) and eventual crashes, has been reverted.
+    *   The initial implementation failed due to incorrect color calculations. A second attempt caused a fatal crash by assuming a non-existent `toHsv` method in the PIXI.js color library.
+    *   To restore stability, all uncommitted changes related to this feature were discarded using `git checkout`. The option was removed from the UI (`index.html`) and the application state (`state.ts`).
+    *   A new, more robust plan (`FacetedGemImplementationPlan.md`) has been created to guide a future implementation of this feature.
+
+**Commit: `[Will be generated]`**
 *   **Date:** 2025-10-17
 *   **Author:** Gemini
 *   **Summary:** `feat(renderer): Implement custom block styles and fix NES style bug`

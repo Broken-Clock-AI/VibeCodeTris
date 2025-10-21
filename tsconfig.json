@@ -9,7 +9,8 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "allowImportingTsExtensions": false,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["vite/client", "jest", "node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

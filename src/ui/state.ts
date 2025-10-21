@@ -9,7 +9,7 @@ export enum UIState {
 
 export interface VisualSettings {
     colorPalette: 'default' | 'deuteranopia' | 'protanopia' | 'tritanopia';
-    blockStyle: 'modern' | 'classic' | 'nes';
+    blockStyle: 'modern' | 'classic' | 'nes' | 'faceted-gem';
     highContrast: boolean;
     distinctPatterns: boolean;
     pieceOutline: boolean;

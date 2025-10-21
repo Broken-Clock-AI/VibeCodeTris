@@ -91,15 +91,15 @@ The following tasks are now the **immediate priority**:
 
 ### Epic: Visual Customization
 - [x] **Task:** Implement Custom Block Styles (Modern, Classic, NES).
-- [ ] **Task:** Implement "Faceted Gem" Block Style.
+- [x] **Task:** Implement "Faceted Gem" Block Style.
 
 ## Phase 4: Verification, Tooling & Polish
 
 ### Epic: Replay Tool
-- [ ] **Task:** Implement replay player (`replayPlayer.ts`)
+- [x] **Task:** Implement replay player (`replayPlayer.ts`)
 
 ### Epic: Tests (Phase 4)
-- [ ] **Task:** Integration/golden tests for replay (`/tests/integration`)
+- [x] **Task:** Integration/golden tests for replay (`/tests/integration`)
 - [ ] **Task:** Add UI customization for touch controls.
 
 ## Post-MVP (Optional)

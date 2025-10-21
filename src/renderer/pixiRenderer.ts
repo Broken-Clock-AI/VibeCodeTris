@@ -222,7 +222,7 @@ export class PixiRenderer {
         });
     }
 
-    private drawBlock(block: PIXI.Graphics, color: number, colorIndex: number) {
+    private drawBlock(block: PIXI.Graphics, color: number, colorIndex: number, solid: boolean) {
         const { blockStyle } = this.visualSettings;
         const { highContrast } = this.visualSettings;
         const strokeColor = highContrast ? 0xFFFFFF : 0x333333;
@@ -246,11 +246,41 @@ export class PixiRenderer {
                 block.stroke({ width: BORDER_WIDTH, color: 0x000000, alpha: 1 });
                 break;
 
+            case 'faceted-gem':
+                if (colorIndex > 0) {
+                    // Deconstruct the hex color into R, G, B components
+                    const r = (color >> 16) & 0xFF;
+                    const g = (color >> 8) & 0xFF;
+                    const b = color & 0xFF;
+
+                    // Calculate the four facet colors by multiplying RGB components
+                    const clamp = (val: number) => Math.min(255, Math.floor(val));
+                    const highlightColor = (clamp(r * 1.5) << 16) + (clamp(g * 1.5) << 8) + clamp(b * 1.5);
+                    const lightColor = (clamp(r * 1.2) << 16) + (clamp(g * 1.2) << 8) + clamp(b * 1.2);
+                    const midToneColor = (clamp(r * 0.9) << 16) + (clamp(g * 0.9) << 8) + clamp(b * 0.9);
+                    const shadowColor = (clamp(r * 0.6) << 16) + (clamp(g * 0.6) << 8) + clamp(b * 0.6);
+                    const borderColor = (clamp(r * 0.5) << 16) + (clamp(g * 0.5) << 8) + clamp(b * 0.5);
+                    
+                    const center = BLOCK_SIZE / 2;
+
+                    // Draw the four facets (triangles)
+                    block.moveTo(0, 0).lineTo(center, center).lineTo(0, BLOCK_SIZE).closePath().fill(highlightColor); // Left
+                    block.moveTo(0, 0).lineTo(BLOCK_SIZE, 0).lineTo(center, center).closePath().fill(lightColor);     // Top
+                    block.moveTo(BLOCK_SIZE, 0).lineTo(BLOCK_SIZE, BLOCK_SIZE).lineTo(center, center).closePath().fill(midToneColor); // Right
+                    block.moveTo(0, BLOCK_SIZE).lineTo(center, center).lineTo(BLOCK_SIZE, BLOCK_SIZE).closePath().fill(shadowColor); // Bottom
+                    
+                    // Draw a border using a darker shade of the base color on top of the facets
+                    block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE).stroke({ width: BORDER_WIDTH, color: borderColor, alpha: 1 });
+                }
+                break;
+
             case 'modern':
             default:
                 block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
                 block.fill(color);
-                block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.5 });
+                if (!solid || colorIndex === 0) {
+                    block.stroke({ width: BORDER_WIDTH, color: strokeColor, alpha: 0.5 });
+                }
                 break;
         }
     }
@@ -271,7 +301,7 @@ export class PixiRenderer {
             const block = this.boardBlocks[i];
             const patternSprite = this.patternSprites[i];
             
-            this.drawBlock(block, colors[colorIndex], colorIndex);
+            this.drawBlock(block, colors[colorIndex], colorIndex, solidPieces);
 
             if (distinctPatterns && colorIndex > 0) {
                 patternSprite.texture = this.patternTextures[colorIndex];
@@ -322,7 +352,7 @@ export class PixiRenderer {
                             const block = this.boardBlocks[blockIndex];
                             const patternSprite = this.patternSprites[blockIndex];
 
-                            this.drawBlock(block, colors[piece.colorIndex], piece.colorIndex);
+                            this.drawBlock(block, colors[piece.colorIndex], piece.colorIndex, solidPieces);
 
                             if (distinctPatterns && piece.colorIndex > 0) {
                                 patternSprite.texture = this.patternTextures[piece.colorIndex];

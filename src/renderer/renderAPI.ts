@@ -1,5 +1,6 @@
 // src/renderer/renderAPI.ts
 import { Snapshot } from '../logic/types';
+import Worker from '../logic/worker?worker';
 
 // A simple event emitter for the API
 type Listener<T> = (data: T) => void;
@@ -82,9 +83,7 @@ class RenderAPI extends EventEmitter<{
         }
         
         // Using Vite's special worker constructor
-        this.worker = new Worker(new URL('../logic/worker.ts', import.meta.url), {
-            type: 'module'
-        });
+        this.worker = new Worker();
 
         this.worker.onmessage = this.handleMessage.bind(this);
         this.worker.onerror = (err) => {

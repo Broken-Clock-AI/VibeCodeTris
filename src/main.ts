@@ -67,7 +67,9 @@ async function main() {
         
         setTimeout(() => {
             handleResize();
-            renderer.start();
+            if (renderer) {
+                renderer.start();
+            }
             accessibilityManager.announce('Game started.');
             console.log('Game started.');
         }, 50);

@@ -1,8 +1,27 @@
 # Progress Log
 
-**Date:** 2025-10-16
+**Date:** 2025-10-18
 
 This document tracks the recent development progress and current known issues.
+
+---
+
+## Visual Polish & Feature Completion
+
+**Date:** 2025-10-20
+
+A follow-up effort was made to address issues with recently implemented visual features, culminating in the successful implementation of the "Faceted Gem" style.
+
+**Key Accomplishments:**
+
+1.  **"Faceted Gem" Style Fixed and Enabled:** The "Faceted Gem" block style, which had previously been reverted due to critical rendering bugs, has now been successfully fixed and is fully functional.
+    *   **The Problem:** The original implementation used manual bitwise operations to calculate the different facet colors. This approach was flawed and resulted in incorrect color values, causing the gems to render as black and, in some cases, crash the application.
+    *   **The Fix:** The rendering logic in `drawBlock` was refactored to use the robust, built-in `PIXI.Color` class for all color manipulations. By using methods like `.multiply()` to generate the highlight and shadow tones, the color calculations are now correct and safe, completely resolving the rendering bug.
+    *   The feature is now stable, performs as expected, and has been re-enabled in the UI.
+
+2.  **"Solid Pieces" Feature Fixed:** A significant visual bug in the "Solid Pieces" feature was resolved.
+    *   **The Problem:** While the feature correctly rendered the active and settled pieces as solid shapes, it also had the unintended side effect of removing the grid lines from the empty parts of the playfield, making it difficult to see the board.
+    *   **The Fix:** The rendering logic in `drawBlock` was updated to be more specific. It now checks if a block is an empty cell (`colorIndex === 0`) and, if so, *always* draws the border, regardless of the "Solid Pieces" setting. This successfully restored the background grid while keeping the pieces themselves solid.
 
 ---
 

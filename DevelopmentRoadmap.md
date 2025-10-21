@@ -8,7 +8,7 @@ With the **Visual Accessibility Foundation** now complete, the project is enteri
 
 This initiative moves beyond accessibility-first features to provide a rich, thematic, and highly varied visual experience for all users. The goal is to implement unique, detailed block styles that radically alter the game's appearance, paying tribute to classic games and exploring new aesthetic possibilities.
 
-The first feature in this new phase is the implementation of the **"Faceted Gem"** block style, as detailed in the `FacetedGemImplementationPlan.md` document.
+The next planned feature in this new phase is the implementation of the **"Faceted Gem"** block style. The work will be guided by the detailed approach outlined in the `FacetedGemImplementationPlan.md` document.
 
 ---
 

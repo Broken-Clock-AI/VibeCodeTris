@@ -1,38 +1,29 @@
-# Faceted Gem Block Style: Analysis & Implementation Plan
+# Faceted Gem Block Style: Elegant Implementation Plan
 
-This document outlines the analysis and high-level implementation strategy for the "Faceted Gem" custom block style, based on the detailed visual description provided.
+This document outlines a robust and straightforward approach to implementing the "Faceted Gem" custom block style, avoiding the complexities and library-specific issues encountered in previous attempts.
 
-### **Analysis & Interpretation**
+## Core Concept
 
-The core goal is to create a visually complex block that simulates a 3D, faceted, gem-like surface. The aesthetic is achieved through a combination of geometric structure and a clever, consistent lighting model.
+The fundamental idea is to manually calculate the colors for the four triangular facets (highlight, light, mid-tone, shadow) of each block by directly manipulating the Red, Green, and Blue (RGB) components of the piece's base color. This method is self-contained, avoids problematic color library functions, and relies on simple, predictable math.
 
-My interpretation is broken down into four key components:
+## High-Level Steps
 
-1.  **Core Structure: The Pyramid:** Each block is not a flat square, but a pyramid viewed from above. This is achieved by dividing the square into four triangles whose vertices all meet at the exact center.
+The implementation will be a self-contained case within the `drawBlock` method in `src/renderer/pixiRenderer.ts`.
 
-2.  **Lighting Model: Upper-Left Source:** A simulated light source is assumed to be in the upper-left. This dictates the color of each of the four triangular facets, creating a convincing 3D illusion:
-    *   **Left Facet:** The brightest, receiving the most direct light (`highlightColor`).
-    *   **Top Facet:** The second brightest (`lightColor`).
-    *   **Right Facet:** A mid-tone, beginning to fall into shadow (`midToneColor`).
-    *   **Bottom Facet:** The darkest, representing the core shadow (`shadowColor`).
+1.  **Receive Base Color:** The function will receive the numerical hex color for the current block (e.g., `0x00FFFF` for cyan).
 
-3.  **Color Palette Derivation:** To ensure the style works with all themes, the four shades for the facets will be programmatically generated from the piece's single base color. For example, the `highlightColor` will be a brightened version of the base color, while the `shadowColor` will be a darkened version.
+2.  **Deconstruct to RGB:** The hex color will be broken down into its individual 8-bit Red, Green, and Blue components.
+    *   Example: `0x00FFFF` -> `R: 0`, `G: 255`, `B: 255`
 
-4.  **Separation & Definition:** A thin, solid black border will be drawn around the entire block. This corresponds to the "black negative space" in the description and is crucial for making each "gem" feel like a distinct, interlocking object.
+3.  **Calculate Facet Colors:** Four new colors will be calculated by multiplying each RGB component by a specific brightness factor. This creates the highlight and shadow effect.
+    *   **Highlight (Brightest):** `R * 1.5`, `G * 1.5`, `B * 1.5`
+    *   **Light (2nd Brightest):** `R * 1.2`, `G * 1.2`, `B * 1.2`
+    *   **Mid-tone (Slight Shadow):** `R * 0.9`, `G * 0.9`, `B * 0.9`
+    *   **Shadow (Darkest):** `R * 0.6`, `G * 0.6`, `B * 0.6`
+    *   *(Note: Values will be clamped to the valid 0-255 range.)*
 
-### **High-Level Implementation Plan**
+4.  **Reconstruct to Hex:** The newly calculated RGB values for each of the four facets will be recombined back into a numerical hex format that the renderer can use.
 
-The feature will be implemented in three distinct phases, modifying the UI, state, and renderer separately for a clean integration.
+5.  **Draw the Four Triangles:** The `PIXI.Graphics` object for the block will be used to draw the four triangles, each filled with its corresponding calculated color, forming the final faceted gem appearance. A simple black border will be drawn around the block to ensure definition.
 
-#### **Phase 1: Update the UI (`index.html`)**
-*   A new option, `<option value="faceted-gem">Faceted Gem</option>`, will be added to the "Custom Block Style" dropdown menu in the settings panel.
-
-#### **Phase 2: Update the State Manager (`src/ui/state.ts`)**
-*   The `VisualSettings` interface will be extended to accept `'faceted-gem'` as a valid string literal for the `blockStyle` property, making the state manager aware of the new option.
-
-#### **Phase 3: Implement the Rendering Logic (`src/renderer/pixiRenderer.ts`)**
-*   The core logic will be implemented within the `drawBlock` method by adding a new `case 'faceted-gem':`.
-*   The rendering steps for each block will be:
-    1.  **Calculate Shades:** Programmatically generate the four required color shades from the piece's base color.
-    2.  **Draw Facets:** Draw four distinct, filled triangles using the calculated shades to create the pyramid structure.
-    3.  **Draw Border:** Draw a thin, black stroke around the block's outer perimeter to ensure sharp definition.
+This approach is elegant because it is deterministic, has no external dependencies, and is easy to debug and fine-tune by simply adjusting the multiplication factors.
