@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VibeCodeTris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #121212;
+            font-family: 'Press Start 2P', cursive;
+            color: white;
+        }
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            max-width: 400px; /* Max width for larger screens */
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        /* Make view containers take full height */
+        #app-container > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        /* Specific layout for the in-game screen */
+        #in-game {
+            justify-content: space-between;
+        }
+        .hidden {
+            display: none !important;
+        }
+        #game-container {
+            border: 2px solid #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 0; /* Fix flexbox overflow issue */
+        }
+
+        #game-container canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Hide touch controls by default */
+        #touch-controls {
+            display: none;
+        }
+
+        /* Styles for menu buttons */
+        .menu-button {
+            background-color: #333;
+            border: 2px solid #555;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .menu-button:hover {
+            background-color: #444;
+            border-color: #777;
+        }
+
+        /* --- Mobile & Touch Device Styles --- */
+        @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+            #touch-controls {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+                gap: 1.5vh;
+                width: 100%;
+                margin-top: 2vh;
+                flex-shrink: 0; /* Prevent controls from shrinking */
+            }
+            .touch-button {
+                background-color: rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                color: white;
+                font-size: 3.5vh; /* Slightly smaller font */
+                padding: 1.5vh;
+                text-align: center;
+                cursor: pointer;
+                user-select: none;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .touch-button:active {
+                background-color: rgba(255, 255, 255, 0.4);
+            }
+            #btn-rot-ccw { grid-column: 1; grid-row: 1; }
+            #btn-hard-drop { grid-column: 2; grid-row: 1; }
+            #btn-rot-cw { grid-column: 3; grid-row: 1; }
+            #btn-move-left { grid-column: 1; grid-row: 2; }
+            #btn-hold { grid-column: 2; grid-row: 2; }
+            #btn-move-right { grid-column: 3; grid-row: 2; }
+        }
+    </style>
+  <script type="module" crossorigin src="/VibeCodeTris/assets/index-pE0kJApe.js"></script>
+</head>
+<body>
+    <div id="app-container">
+        <!-- Main Menu Screen -->
+        <div id="main-menu">
+            <h1>VibeCodeTris</h1>
+            <button id="play-button" class="menu-button">Play</button>
+            <button id="settings-button" class="menu-button">Settings</button>
+        </div>
+
+        <!-- In-Game Screen -->
+        <div id="in-game" class="hidden">
+            <div id="game-container"></div>
+            <div id="touch-controls">
+                <div id="btn-rot-ccw" class="touch-button">↶</div>
+                <div id="btn-hard-drop" class="touch-button">▼▼</div>
+                <div id="btn-rot-cw" class="touch-button">↷</div>
+                <div id="btn-move-left" class="touch-button">◄</div>
+                <div id="btn-hold" class="touch-button">Hold</div>
+                <div id="btn-move-right" class="touch-button">►</div>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="hidden">
+            <h2>Settings</h2>
+            <div class="setting">
+                <label for="das-slider">DAS (Delayed Auto Shift): <span id="das-value">10</span></label>
+                <input type="range" id="das-slider" min="0" max="30" value="10">
+            </div>
+            <div class="setting">
+                <label for="arr-slider">ARR (Auto Repeat Rate): <span id="arr-value">1</span></label>
+                <input type="range" id="arr-slider" min="0" max="10" value="1">
+            </div>
+            <div class="setting">
+                <label for="color-palette-select">Color Palette</label>
+                <select id="color-palette-select">
+                    <option value="default">Default</option>
+                    <option value="deuteranopia">Deuteranopia</option>
+                    <option value="protanopia">Protanopia</option>
+                    <option value="tritanopia">Tritanopia</option>
+                </select>
+            </div>
+            <div class="setting">
+                <label for="block-style-select">Custom Block Style</label>
+                <select id="block-style-select">
+                    <option value="modern">Modern</option>
+                    <option value="classic">Classic</option>
+                    <option value="nes">NES-like</option>
+                    <option value="faceted-gem">Faceted Gem</option>
+                </select>
+            </div>
+            <div class="setting">
+                <label for="high-contrast-checkbox">High-Contrast Mode</label>
+                <input type="checkbox" id="high-contrast-checkbox">
+            </div>
+            <div class="setting">
+                <label for="distinct-patterns-checkbox">Distinct Piece Patterns</label>
+                <input type="checkbox" id="distinct-patterns-checkbox">
+            </div>
+            <div class="setting">
+                <label for="solid-pieces-checkbox">Solid Piece Shapes</label>
+                <input type="checkbox" id="solid-pieces-checkbox">
+            </div>
+            <div class="setting">
+                <label for="piece-outline-checkbox">High-Contrast Piece Outline</label>
+                <input type="checkbox" id="piece-outline-checkbox">
+            </div>
+            <div class="setting">
+                <label for="ghost-piece-checkbox">Show Ghost Piece</label>
+                <input type="checkbox" id="ghost-piece-checkbox" checked>
+            </div>
+            <button id="back-button-settings" class="menu-button">Back</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="hidden">
+            <h2>Game Over</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="play-again-button" class="menu-button">Play Again</button>
+            <button id="main-menu-button" class="menu-button">Main Menu</button>
+        </div>
+    </div>
+
+</body>
+</html>
