@@ -199,6 +199,16 @@ export class PixiRenderer {
     private setupSubscriptions() {
         renderAPI.on('snapshot', (snapshot) => {
             this.lastSnapshot = snapshot;
+
+            // --- Update Core UI ---
+            const scoreEl = document.getElementById('score-value');
+            const levelEl = document.getElementById('level-value');
+            const linesEl = document.getElementById('lines-value');
+
+            if (scoreEl) scoreEl.textContent = snapshot.score.toString();
+            if (levelEl) levelEl.textContent = snapshot.level.toString();
+            if (linesEl) linesEl.textContent = snapshot.lines.toString();
+            
             if (snapshot.gameOver) {
                 this.uiManager.changeState(UIState.GameOver);
                 const finalScoreEl = document.getElementById('final-score');
