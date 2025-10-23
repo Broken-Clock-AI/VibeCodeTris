@@ -11,8 +11,10 @@ async function main() {
     let renderer: PixiRenderer | null = null;
     const gameContainer = document.getElementById('game-container');
     const appContainer = document.getElementById('app-container');
+    const infoPanel = document.getElementById('in-game-info');
+    const touchControls = document.getElementById('touch-controls');
 
-    if (!gameContainer || !appContainer) {
+    if (!gameContainer || !appContainer || !infoPanel || !touchControls) {
         throw new Error('Core container elements not found');
     }
 
@@ -22,19 +24,29 @@ async function main() {
 
         if (!renderer) return;
 
-        // Temporarily reset container size to measure available space
-        gameContainer.style.width = '';
-        gameContainer.style.height = '';
+        // Calculate available height by subtracting info and controls heights
+        const totalHeight = appContainer.clientHeight;
+        const infoHeight = infoPanel.offsetHeight;
         
-        const containerWidth = gameContainer.clientWidth;
-        const containerHeight = gameContainer.clientHeight;
-        const aspectRatio = 1 / 2; // Width to Height
+        // Check if touch controls are displayed before getting their height
+        const touchControlsVisible = getComputedStyle(touchControls).display !== 'none';
+        const controlsHeight = touchControlsVisible ? touchControls.offsetHeight : 0;
+        
+        // A small buffer to prevent the game from touching the other UI elements
+        const verticalMargin = 20; 
 
-        let newWidth = containerWidth;
+        const availableHeight = totalHeight - infoHeight - controlsHeight - verticalMargin;
+        
+        // Use the parent of the game container for width calculation, which is #in-game
+        const availableWidth = gameContainer.parentElement?.clientWidth ?? 0;
+
+        const aspectRatio = 1 / 2; // Game board is 10 blocks wide, 20 blocks high
+
+        let newWidth = availableWidth;
         let newHeight = newWidth / aspectRatio;
 
-        if (newHeight > containerHeight) {
-            newHeight = containerHeight;
+        if (newHeight > availableHeight) {
+            newHeight = availableHeight;
             newWidth = newHeight * aspectRatio;
         }
         
