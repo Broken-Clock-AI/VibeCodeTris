@@ -21,6 +21,7 @@
             background-color: #121212;
             font-family: 'Press Start 2P', cursive;
             color: white;
+            font-size: 2vmin; /* Base font size on viewport */
         }
         #app-container {
             display: flex;
@@ -75,11 +76,11 @@
             background-color: #333;
             border: 2px solid #555;
             color: white;
-            padding: 15px 30px;
-            font-size: 1.2em;
+            padding: 2vh 4vw; /* Responsive padding */
+            font-size: 2.2vmin; /* Responsive font size */
             font-family: 'Press Start 2P', cursive;
             cursor: pointer;
-            margin: 10px;
+            margin: 1.5vh; /* Responsive margin */
             transition: background-color 0.3s, border-color 0.3s;
         }
         .menu-button:hover {
@@ -122,6 +123,91 @@
             #btn-move-right { grid-column: 3; grid-row: 2; }
         }
     </style>
+    <style>
+        /* --- Settings Screen Styles --- */
+        #settings-screen {
+            justify-content: center; /* Vertically center the form */
+            padding: 2vh 10px;
+            box-sizing: border-box;
+            overflow: hidden; /* No scrollbars */
+            width: 100%;
+        }
+        #settings-form {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 380px;
+        }
+        #settings-screen h2 {
+            margin-bottom: 3vh;
+            font-size: 2.5vmin;
+            text-align: center;
+        }
+
+        .setting-row {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 2.5vh;
+            gap: 1vh;
+        }
+        .setting-row label {
+            line-height: 1.4;
+            font-size: 1.8vmin;
+        }
+        .setting-row input[type="range"] {
+            width: 100%;
+        }
+        .setting-row select {
+            width: 100%;
+            padding: 0.8vh;
+            font-family: inherit;
+            background-color: #333;
+            color: white;
+            border: 2px solid #555;
+            font-size: 1.8vmin;
+        }
+
+        @media (min-width: 360px) {
+            .setting-row {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 15px;
+            }
+            .setting-row select {
+                width: auto;
+                min-width: 140px;
+            }
+        }
+
+        .settings-fieldset {
+            border: 2px solid #555;
+            padding: 2vh 15px;
+            margin-bottom: 3vh;
+            display: flex;
+            flex-direction: column;
+            gap: 2vh;
+        }
+        .settings-fieldset legend {
+            padding: 0 10px;
+            font-size: 1.5vmin;
+            color: #ccc;
+        }
+        .checkbox-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkbox-row label {
+            flex-grow: 1;
+            font-size: 1.8vmin;
+        }
+
+        #back-button-settings {
+            margin-top: 1vh;
+        }
+    </style>
 </head>
 <body>
     <div id="app-container">
@@ -147,54 +233,66 @@
 
         <!-- Settings Screen -->
         <div id="settings-screen" class="hidden">
-            <h2>Settings</h2>
-            <div class="setting">
-                <label for="das-slider">DAS (Delayed Auto Shift): <span id="das-value">10</span></label>
-                <input type="range" id="das-slider" min="0" max="30" value="10">
+            <div id="settings-form">
+                <h2>Settings</h2>
+
+                <div class="setting-row">
+                    <label for="das-slider">DAS (Delayed Auto Shift): <span id="das-value">10</span></label>
+                    <input type="range" id="das-slider" min="0" max="30" value="10">
+                </div>
+                <div class="setting-row">
+                    <label for="arr-slider">ARR (Auto Repeat Rate): <span id="arr-value">1</span></label>
+                    <input type="range" id="arr-slider" min="0" max="10" value="1">
+                </div>
+                <div class="setting-row">
+                    <label for="color-palette-select">Color Palette</label>
+                    <select id="color-palette-select">
+                        <option value="default">Default</option>
+                        <option value="deuteranopia">Deuteranopia</option>
+                        <option value="protanopia">Protanopia</option>
+                        <option value="tritanopia">Tritanopia</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label for="block-style-select">Custom Block Style</label>
+                    <select id="block-style-select">
+                        <option value="modern">Modern</option>
+                        <option value="classic">Classic</option>
+                        <option value="nes">NES-like</option>
+                        <option value="faceted-gem">Faceted Gem</option>
+                    </select>
+                </div>
+
+                <fieldset class="settings-fieldset">
+                    <legend>Visuals</legend>
+                    <div class="checkbox-row">
+                        <label for="ghost-piece-checkbox">Show Ghost Piece</label>
+                        <input type="checkbox" id="ghost-piece-checkbox" checked>
+                    </div>
+                    <div class="checkbox-row">
+                        <label for="solid-pieces-checkbox">Solid Piece Shapes</label>
+                        <input type="checkbox" id="solid-pieces-checkbox">
+                    </div>
+                </fieldset>
+
+                <fieldset class="settings-fieldset">
+                    <legend>Accessibility</legend>
+                    <div class="checkbox-row">
+                        <label for="high-contrast-checkbox">High-Contrast Mode</label>
+                        <input type="checkbox" id="high-contrast-checkbox">
+                    </div>
+                    <div class="checkbox-row">
+                        <label for="piece-outline-checkbox">High-Contrast Piece Outline</label>
+                        <input type="checkbox" id="piece-outline-checkbox">
+                    </div>
+                    <div class="checkbox-row">
+                        <label for="distinct-patterns-checkbox">Distinct Piece Patterns</label>
+                        <input type="checkbox" id="distinct-patterns-checkbox">
+                    </div>
+                </fieldset>
+                
+                <button id="back-button-settings" class="menu-button">Back</button>
             </div>
-            <div class="setting">
-                <label for="arr-slider">ARR (Auto Repeat Rate): <span id="arr-value">1</span></label>
-                <input type="range" id="arr-slider" min="0" max="10" value="1">
-            </div>
-            <div class="setting">
-                <label for="color-palette-select">Color Palette</label>
-                <select id="color-palette-select">
-                    <option value="default">Default</option>
-                    <option value="deuteranopia">Deuteranopia</option>
-                    <option value="protanopia">Protanopia</option>
-                    <option value="tritanopia">Tritanopia</option>
-                </select>
-            </div>
-            <div class="setting">
-                <label for="block-style-select">Custom Block Style</label>
-                <select id="block-style-select">
-                    <option value="modern">Modern</option>
-                    <option value="classic">Classic</option>
-                    <option value="nes">NES-like</option>
-                    <option value="faceted-gem">Faceted Gem</option>
-                </select>
-            </div>
-            <div class="setting">
-                <label for="high-contrast-checkbox">High-Contrast Mode</label>
-                <input type="checkbox" id="high-contrast-checkbox">
-            </div>
-            <div class="setting">
-                <label for="distinct-patterns-checkbox">Distinct Piece Patterns</label>
-                <input type="checkbox" id="distinct-patterns-checkbox">
-            </div>
-            <div class="setting">
-                <label for="solid-pieces-checkbox">Solid Piece Shapes</label>
-                <input type="checkbox" id="solid-pieces-checkbox">
-            </div>
-            <div class="setting">
-                <label for="piece-outline-checkbox">High-Contrast Piece Outline</label>
-                <input type="checkbox" id="piece-outline-checkbox">
-            </div>
-            <div class="setting">
-                <label for="ghost-piece-checkbox">Show Ghost Piece</label>
-                <input type="checkbox" id="ghost-piece-checkbox" checked>
-            </div>
-            <button id="back-button-settings" class="menu-button">Back</button>
         </div>
 
         <!-- Game Over Screen -->
