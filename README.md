@@ -1,7 +1,7 @@
 # VibeCodeTris: A Deterministic Tetris Engine
 
 This repository contains the source code for a fully deterministic, worker-authoritative Tetris engine built with TypeScript. The project prioritizes determinism, replayability, and a clean separation between game logic and rendering.
-Live Demo: https://broken-clock-ai.github.io/VibeCodeTris/
+## Live Demo: https://broken-clock-ai.github.io/VibeCodeTris/
 ---
 ## Current Status (As of October 2025)
 
