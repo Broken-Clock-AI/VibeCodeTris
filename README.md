@@ -5,6 +5,14 @@
 
 ---
 
+## 🌐 Live Demo
+
+👉 **Play it here:** [https://broken-clock-ai.github.io/VibeCodeTris/](https://broken-clock-ai.github.io/VibeCodeTris/)
+
+Experience the deterministic engine in action — real-time worker updates, smooth rendering, and replayable logic.
+
+---
+
 ## 🧭 Overview
 
 **VibeCodeTris** is a modern reimagining of the classic Tetris engine — designed for clarity, determinism, and modularity.  
