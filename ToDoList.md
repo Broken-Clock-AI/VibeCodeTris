@@ -102,9 +102,21 @@ The following tasks are now the **immediate priority**:
 - [x] **Task:** Integration/golden tests for replay (`/tests/integration`)
 - [ ] **Task:** Add UI customization for touch controls.
 
+## Phase 5: Procedural Audio Enhancements
+
+**This is the current, active development phase.** For a detailed breakdown, see `VibeCodeTris_Fully_Procedural_Audio_Spec.md` and `VibeCodeTris_Piece_Melody_Audio_Spec.md`.
+
+- [x] **Task:** Implement core procedural audio engine with Tone.js.
+- [x] **Task:** Fix audio crash and refine synth presets for better sound quality.
+- [x] **Task:** Implement progressive, chord-based sounds for line clears.
+- [ ] **Task:** Implement "Piece Melody" System:
+    - [ ] **Sub-task:** Emit new `pieceMove`, `softDrop`, and `hardDrop` events from the game engine.
+    - [ ] **Sub-task:** Implement stateful `activePieceRootNote` in the `AudioEngine`.
+    - [ ] **Sub-task:** Create new synth and rules for melodic movement and drop sounds.
+
 ## Post-MVP (Optional)
 
 ### Epic: Optional
 - [ ] **Task:** Visualizer shaders and bloom (`shaders/`)
 - [ ] **Task:** Particles and advanced events (Renderer)
-- [ ] **Task:** Audio sync and WebAudio (Renderer)
+- [x] **Task:** Audio sync and WebAudio (Renderer)

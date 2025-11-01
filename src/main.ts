@@ -3,11 +3,68 @@ import { PixiRenderer } from './renderer/pixiRenderer';
 import { InputManager } from './ui/input/InputManager';
 import { UIStateManager, UIState, VisualSettings } from './ui/state';
 import { AccessibilityManager } from './ui/accessibility';
+import { AudioEngine } from './audio/AudioEngine';
+import { AudioConfig } from './audio/types';
 
 async function main() {
     const uiManager = new UIStateManager();
     const inputManager = new InputManager();
     const accessibilityManager = new AccessibilityManager(document.body);
+
+    // Placeholder Audio Configuration (from VibeCodeTris_Procedural_Audio_Spec.md)
+    const audioConfig: AudioConfig = {
+        meta: { name: "VibeCodeTris_Audio", tempo: 100, timeSignature: "4/4" },
+        scales: {
+            default: { root: 60, pattern: "majorPent" }, // C3 Major Pentatonic
+        },
+        instruments: [
+            { id: "pieceSpawnSynth", type: "synth", preset: { oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }, maxVoices: 6, gain: 0.6 },
+            { id: "pieceLockSynth", type: "synth", preset: { oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }, maxVoices: 6, gain: 0.7 },
+            { id: "lineClearSynth", type: "synth", preset: { oscillator: { type: "sine" }, envelope: { attack: 0.1, decay: 0.3, sustain: 0.1, release: 0.5 } }, maxVoices: 4, gain: 0.8 },
+            { id: "gameOverSynth", type: "synth", preset: { oscillator: { type: "sawtooth" }, envelope: { attack: 0.1, decay: 1, sustain: 0.5, release: 1 } }, maxVoices: 1, gain: 0.5 },
+        ],
+        rules: {
+            pieceSpawn: {
+                instrumentId: "pieceSpawnSynth",
+                description: "Plays when a new piece spawns",
+                pitchSource: { type: "mapIndex", mapKey: "type" },
+                rhythm: { mode: "onEvent" },
+                probability: 1,
+                velocity: { min: 0.6, max: 0.9 },
+                duration: "16n",
+            },
+            pieceLock: {
+                instrumentId: "pieceLockSynth",
+                description: "Plays when a piece locks",
+                pitchSource: { type: "random", maxIndex: 3 },
+                rhythm: { mode: "onEvent" },
+                probability: 1,
+                velocity: { min: 0.7, max: 1.0 },
+                duration: "8n",
+            },
+            lineClear: {
+                instrumentId: "lineClearSynth",
+                description: "Plays when lines are cleared",
+                pitchSource: { type: "random", maxIndex: 5 }, 
+                rhythm: { mode: "onEvent" },
+                probability: 1,
+                velocity: { min: 0.8, max: 1.0 },
+                duration: "4n",
+            },
+            gameOver: {
+                instrumentId: "gameOverSynth",
+                description: "Plays when game is over",
+                pitchSource: { type: "mapIndex", mapKey: "level" },
+                rhythm: { mode: "onEvent" },
+                probability: 1,
+                velocity: { min: 0.9, max: 1.0 },
+                duration: "1n",
+            },
+        },
+    };
+
+    const gameSeed = Math.floor(Math.random() * 1_000_000_000); // Use a consistent seed for audio
+    const audioEngine = new AudioEngine(gameSeed, audioConfig);
     let renderer: PixiRenderer | null = null;
     const gameContainer = document.getElementById('game-container');
     const appContainer = document.getElementById('app-container');
@@ -75,7 +132,7 @@ async function main() {
             gameContainer.removeChild(gameContainer.firstChild);
         }
 
-        renderer = await PixiRenderer.create(gameContainer, uiManager, accessibilityManager);
+        renderer = await PixiRenderer.create(gameContainer, uiManager, accessibilityManager, audioEngine);
         
         setTimeout(() => {
             handleResize();
@@ -90,6 +147,8 @@ async function main() {
     // --- Get UI Elements ---
     const playButton = document.getElementById('play-button');
     const settingsButton = document.getElementById('settings-button');
+    const enableAudioButton = document.getElementById('enable-audio-button'); // New audio button
+    const testAudioButton = document.getElementById('test-audio-button');
     const backButton = document.getElementById('back-button-settings');
     const playAgainButton = document.getElementById('play-again-button');
     const mainMenuButton = document.getElementById('main-menu-button');
@@ -105,7 +164,7 @@ async function main() {
     const solidPiecesCheckbox = document.getElementById('solid-pieces-checkbox') as HTMLInputElement;
     const ghostPieceCheckbox = document.getElementById('ghost-piece-checkbox') as HTMLInputElement;
 
-    if (!playButton || !settingsButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !blockStyleSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox) {
+    if (!playButton || !settingsButton || !enableAudioButton || !testAudioButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !blockStyleSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox) {
         throw new Error('One or more UI elements not found');
     }
 
@@ -138,6 +197,18 @@ async function main() {
 
     dasSlider.addEventListener('input', updateTimings);
     arrSlider.addEventListener('input', updateTimings);
+
+    enableAudioButton.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        enableAudioButton.classList.add('hidden'); // Hide button after audio is enabled
+        accessibilityManager.announce('Audio enabled.');
+    });
+
+    testAudioButton.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        enableAudioButton.classList.add('hidden'); // Also hide the enable button
+        audioEngine.playTestSound();
+    });
 
     colorPaletteSelect.addEventListener('change', () => {
         uiManager.updateVisualSettings({ colorPalette: colorPaletteSelect.value as VisualSettings['colorPalette'] });
