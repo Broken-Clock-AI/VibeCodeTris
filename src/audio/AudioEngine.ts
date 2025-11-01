@@ -1,6 +1,6 @@
 // src/audio/AudioEngine.ts
 import { Snapshot } from "../logic/types";
-import { AudioConfig, InstrumentConfig, EventRuleConfig, PitchSourceConfig, RhythmConfig, SCALES } from "./types.ts";
+import { AudioConfig, InstrumentConfig, EventRuleConfig, PitchSourceConfig, RhythmConfig, SCALES } from "./types";
 import { GRAVITY_START_DELAY } from "../logic/constants";
 import * as Tone from 'tone';
 import type { Gain as ToneGain, Synth as ToneSynth, PolySynth as TonePolySynth, Unit as ToneUnit, Time as ToneTime } from "tone";
