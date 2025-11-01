@@ -2,9 +2,7 @@
 import { Snapshot } from "../logic/types";
 import { AudioConfig, InstrumentConfig, EventRuleConfig, PitchSourceConfig, RhythmConfig, SCALES } from "./types";
 import { GRAVITY_START_DELAY } from "../logic/constants";
-
-// --- Type Imports for Tone.js ---
-// We can't import the whole library at the top level, but we need the types.
+import * as Tone from 'tone';
 import type { Gain as ToneGain, Synth as ToneSynth, PolySynth as TonePolySynth, Unit as ToneUnit, Time as ToneTime } from "tone";
 
 // --- Deterministic PRNG (from spec) ---
@@ -50,14 +48,12 @@ class Instrument {
   private pool: (ToneSynth | TonePolySynth)[];
   private maxVoices: number;
   private gainNode: ToneGain;
-  private Tone: any; // Store the dynamically imported Tone.js library
 
-  constructor(id: string, opts: InstrumentConfig, toneLib: any) {
+  constructor(id: string, opts: InstrumentConfig) {
     this.id = id;
     this.opts = opts;
-    this.Tone = toneLib;
     this.maxVoices = opts.maxVoices || 8;
-    this.gainNode = new this.Tone.Gain(opts.gain || 0.8).toDestination();
+    this.gainNode = new Tone.Gain(opts.gain || 0.8).toDestination();
     this.pool = [];
   }
 
@@ -67,17 +63,17 @@ class Instrument {
 
     let voice;
     if (isChord) {
-        voice = new this.Tone.PolySynth(this.Tone.Synth, this.opts.preset || {}).connect(this.gainNode);
+        voice = new Tone.PolySynth(Tone.Synth, this.opts.preset || {}).connect(this.gainNode);
     } else {
         voice = this.pool.find(v => !(v as any).isPlaying);
         if (!voice) {
             if (this.pool.length < this.maxVoices) {
-                voice = new this.Tone.Synth(this.opts.preset || {}).connect(this.gainNode);
+                voice = new Tone.Synth(this.opts.preset || {}).connect(this.gainNode);
                 this.pool.push(voice);
             } else {
                 voice = this.pool.shift()!;
                 voice.dispose();
-                voice = new this.Tone.Synth(this.opts.preset || {}).connect(this.gainNode);
+                voice = new Tone.Synth(this.opts.preset || {}).connect(this.gainNode);
                 this.pool.push(voice);
             }
         }
@@ -87,10 +83,10 @@ class Instrument {
 
     if (!isChord) {
         (voice as any).isPlaying = true;
-        setTimeout(() => { (voice as any).isPlaying = false; }, this.Tone.Time(dur).toMilliseconds());
+        setTimeout(() => { (voice as any).isPlaying = false; }, Tone.Time(dur).toMilliseconds());
     } else {
         // For PolySynth, dispose after the duration to clean up resources
-        setTimeout(() => { voice.dispose(); }, this.Tone.Time(dur).toMilliseconds() + 100);
+        setTimeout(() => { voice.dispose(); }, Tone.Time(dur).toMilliseconds() + 100);
     }
   }
 
@@ -106,13 +102,11 @@ class RulesEngine {
   private config: { [key: string]: EventRuleConfig };
   private scale: Scale;
   private rng: SeededRNG;
-  private Tone: any;
 
-  constructor(config: { [key: string]: EventRuleConfig }, scale: Scale, rng: SeededRNG, toneLib: any) {
+  constructor(config: { [key: string]: EventRuleConfig }, scale: Scale, rng: SeededRNG) {
     this.config = config;
     this.scale = scale;
     this.rng = rng;
-    this.Tone = toneLib;
   }
 
   handleEvent(ev: any, gameState: any) {
@@ -199,10 +193,10 @@ class RulesEngine {
   }
 
   private alignToSlot(rhythm: RhythmConfig): number {
-    const now = this.Tone.now();
+    const now = Tone.now();
     const slot = (rhythm && rhythm.slot) ? rhythm.slot : "8n";
-    const next = this.Tone.Time(slot).toSeconds() * Math.ceil(this.Tone.Transport.seconds / this.Tone.Time(slot).toSeconds());
-    return now + (next - this.Tone.Transport.seconds);
+    const next = Tone.Time(slot).toSeconds() * Math.ceil(Tone.Transport.seconds / Tone.Time(slot).toSeconds());
+    return now + (next - Tone.Transport.seconds);
   }
 }
 
@@ -245,7 +239,6 @@ export class AudioEngine {
   private masterGain: ToneGain | null = null;
   private initialized: boolean = false;
   private config: AudioConfig;
-  private Tone: any = null;
 
   constructor(gameSeed: number, config: AudioConfig) {
     this.rng = new SeededRNG(gameSeed);
@@ -254,28 +247,25 @@ export class AudioEngine {
 
   public async initializeAudioContext() {
     if (this.initialized) return;
-
-    // Dynamically import Tone.js
-    this.Tone = await import("tone");
     
-    await this.Tone.start();
+    await Tone.start();
     this.initialized = true;
 
-    this.masterGain = new this.Tone.Gain(1).toDestination();
+    this.masterGain = new Tone.Gain(1).toDestination();
 
-    this.Tone.Transport.bpm.value = this.config.meta.tempo;
-    this.Tone.Transport.timeSignature = this.config.meta.timeSignature;
+    Tone.Transport.bpm.value = this.config.meta.tempo;
+    Tone.Transport.timeSignature = this.config.meta.timeSignature;
 
     const scale = new Scale(this.config.scales.default.root, this.config.scales.default.pattern);
 
     this.config.instruments.forEach((instConfig: InstrumentConfig) => {
-      const instrument = new Instrument(instConfig.id, instConfig, this.Tone);
+      const instrument = new Instrument(instConfig.id, instConfig);
       Instruments.set(instConfig.id, instrument);
     });
 
-    this.rulesEngine = new RulesEngine(this.config.rules, scale, this.rng, this.Tone);
+    this.rulesEngine = new RulesEngine(this.config.rules, scale, this.rng);
     
-    this.Tone.Transport.start("+0.1");
+    Tone.Transport.start("+0.1");
     console.log("AudioContext initialized and Tone.Transport started.");
   }
 
@@ -287,7 +277,7 @@ export class AudioEngine {
       console.log("Attempting to play test sound...");
       const testInstrument = Instruments.get("pieceSpawnSynth");
       if (testInstrument) {
-          const now = this.Tone.now();
+          const now = Tone.now();
           testInstrument.trigger(60, 0.8, '8n', now); // Play a C4 note
           console.log("Test sound triggered on instrument 'pieceSpawnSynth'.");
       } else {

@@ -5,6 +5,7 @@ import { COLS, ROWS } from '../logic/constants';
 import { GameEvent, Snapshot } from '../logic/types';
 import { UIStateManager, UIState, VisualSettings } from '../ui/state';
 import { AccessibilityManager } from '../ui/accessibility';
+import { AudioEngine } from '../audio/AudioEngine';
 
 const BLOCK_SIZE = 30;
 const BORDER_WIDTH = 2;
@@ -36,26 +37,29 @@ export class PixiRenderer {
     private patternSprites: PIXI.Sprite[] = [];
     private uiManager: UIStateManager;
     private accessibilityManager: AccessibilityManager;
+    private audioEngine: AudioEngine; // Added AudioEngine
     private lastAnnouncedLevel: number = 1;
     private visualSettings: VisualSettings;
     private patternTextures: PIXI.Texture[] = [];
     private lastSnapshot: Snapshot | null = null;
 
-    private constructor(uiManager: UIStateManager, accessibilityManager: AccessibilityManager, initialSettings: VisualSettings) {
+    private constructor(uiManager: UIStateManager, accessibilityManager: AccessibilityManager, initialSettings: VisualSettings, audioEngine: AudioEngine) {
         this.app = new PIXI.Application();
         this.boardContainer = new PIXI.Container();
         this.uiManager = uiManager;
         this.accessibilityManager = accessibilityManager;
         this.visualSettings = initialSettings;
+        this.audioEngine = audioEngine; // Assign AudioEngine
     }
 
     public static async create(
         container: HTMLElement, 
         uiManager: UIStateManager, 
-        accessibilityManager: AccessibilityManager
+        accessibilityManager: AccessibilityManager,
+        audioEngine: AudioEngine // Added AudioEngine to create method
     ): Promise<PixiRenderer> {
         const initialSettings = uiManager.getVisualSettings();
-        const renderer = new PixiRenderer(uiManager, accessibilityManager, initialSettings);
+        const renderer = new PixiRenderer(uiManager, accessibilityManager, initialSettings, audioEngine);
         await renderer.app.init({
             width: BOARD_WIDTH,
             height: BOARD_HEIGHT,
@@ -220,6 +224,7 @@ export class PixiRenderer {
             }
             this.drawBoard(snapshot);
             this.handleGameEvents(snapshot.events);
+            this.audioEngine.handleSnapshot(snapshot);
         });
 
         renderAPI.on('log', (log) => {

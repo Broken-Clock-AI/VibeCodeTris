@@ -141,7 +141,6 @@ export class TetrisEngine {
         return this.createSnapshot();
     }
     this.tickCounter++;
-    this.events = []; // Clear events for the new tick
 
     if (!this.currentPiece) {
         this.spawnPiece();
@@ -303,6 +302,8 @@ export class TetrisEngine {
         }
     }
 
+    this.events.push({ type: 'pieceLock', tick: this.tickCounter, data: { type: this.currentPiece.type } });
+
     // --- Line Clearing & Scoring ---
     let linesCleared = 0;
     const clearedRows: number[] = [];
@@ -400,6 +401,8 @@ export class TetrisEngine {
         colorIndex,
     };
 
+    this.events.push({ type: 'pieceSpawn', tick: this.tickCounter, data: { type } });
+
     if (!isValidPosition(this.currentPiece.matrix, this.currentPiece.x, this.currentPiece.y, this.board)) {
         this.gameOver = true;
         this.events.push({ type: 'gameOver', tick: this.tickCounter });
@@ -435,6 +438,9 @@ export class TetrisEngine {
     // the checksum and the transferable payload. The engine's internal
     // buffer must NOT be transferred.
     const boardBufferCopy = this.board.buffer.slice(0) as ArrayBuffer;
+    
+    const eventsForSnapshot = [...this.events];
+    this.events = []; // Clear for the next tick
 
     const snapshotData: Omit<Snapshot, 'checksum'> = {
         protocolVersion: PROTOCOL_VERSION,
@@ -472,7 +478,7 @@ export class TetrisEngine {
         lines: this.lines,
         gameOver: this.gameOver,
 
-        events: this.events,
+        events: eventsForSnapshot,
     };
 
     const checksum = calculateChecksum(snapshotData);
