@@ -1,132 +1,128 @@
-# VibeCodeTris: A Deterministic Tetris Engine
+# 🎮 VibeCodeTris
 
-This repository contains the source code for a fully deterministic, worker-authoritative Tetris engine built with TypeScript. The project prioritizes determinism, replayability, and a clean separation between game logic and rendering.
-
----
-## Current Status (As of October 2025)
-
-The project is currently at the beginning of **Phase 5**.
-
-*   ✅ **Phase 1: Core Engine** - Complete. The deterministic logic is fully implemented and unit-tested.
-*   ✅ **Phase 2: Worker Layer** - Complete. The engine runs successfully in a resilient web worker.
-*   ✅ **Phase 3: Renderer & UI** - Complete. A functional PixiJS renderer is implemented, along with a fully responsive UI with keyboard, touch, and gamepad controls.
-*   ✅ **Phase 4: Visual Accessibility** - Complete. A full suite of blendable visual accessibility options has been implemented, including colorblind palettes, high-contrast mode, distinct piece patterns, a high-contrast piece outline, and an option for solid piece shapes.
-*   🚧 **Phase 5: Advanced Accessibility & Tooling** - In Progress.
-
-The application is in a stable, playable state. See the `ToDoList.md` for a detailed breakdown of pending tasks.
-
----
-## Project Purpose
-
-To build a fully deterministic, worker-authoritative Tetris engine (TypeScript) with:
-
-*   Complete **replayability** (seed + input log + PRNG/bag state),
-*   **Compact, validated snapshots** + event stream,
-*   **Resilient crash/recover** flow,
-*   **Tested and performance-aware** minimal PixiJS renderer (MVP) with optional Visualizer mode,
-*   **Accessibility and fallback support** (Canvas2D, screen-readers, touch).
+> A deterministic, worker-driven Tetris engine built with TypeScript and PixiJS.  
+> Cleanly separated logic, rendering, and accessibility layers for precision, performance, and replayability.
 
 ---
 
-## Core Features
+## 🌐 Live Demo
 
-*   **Authoritative Logic Worker**: The game's core logic runs in a separate Web Worker, ensuring the main UI thread remains responsive. The worker is the single source of truth.
-*   **Guaranteed Determinism**: Using a seedable integer-only PRNG and a tick-based simulation, every game session is 100% replayable from a seed and an input log.
-*   **Resilient Architecture**: The engine is designed to handle worker crashes gracefully. It can recover its state from the last known snapshot, ensuring a robust user experience.
-*   **Snapshot-Based Communication**: The worker emits compact, versioned, and checksum-validated snapshots of the game state, which the renderer consumes. This decouples the logic from the presentation layer.
-*   **Test-Driven Development**: The project includes a comprehensive testing strategy with unit tests for core logic, and integration tests for replay validation and crash recovery.
-*   **Modern Tech Stack**: Built with TypeScript, Vite for fast development, PixiJS for hardware-accelerated rendering, and Vitest for testing.
+👉 **Play it here:** [https://broken-clock-ai.github.io/VibeCodeTris/](https://broken-clock-ai.github.io/VibeCodeTris/)
+
+Experience the deterministic engine in action — real-time worker updates, smooth rendering, and replayable logic.
 
 ---
 
-## Architecture Overview
+## 🧭 Overview
 
-The architecture is fundamentally based on a separation of concerns between the **Logic Worker** and the **Renderer**.
-
-1.  **Logic Worker (`/src/logic`)**: A self-contained module running in a Web Worker. It handles all game mechanics: piece movement, rotation (SRS), scoring, PRNG, and the tick loop. It is the sole authority on the game's state.
-2.  **Snapshot/Event Bus**: The worker communicates with the main thread by posting versioned and checksummed `Snapshot` objects at a regular interval (e.g., 60 TPS). It also emits `Event` objects for discrete occurrences (e.g., `lineClear`, `tSpin`).
-3.  **Renderer (`/src/renderer`)**: A passive rendering layer running on the main thread. It subscribes to the snapshot stream, interpolates between states for smooth visuals, and renders the game using PixiJS. It also handles user input, which it forwards to the worker.
-
-This design ensures that the game logic is never blocked by rendering or other main-thread tasks, leading to a stable and performant experience.
+**VibeCodeTris** is a modern reimagining of the classic Tetris engine — designed for clarity, determinism, and modularity.  
+It runs its core game logic inside a **Web Worker**, isolating state updates and ensuring reproducible gameplay across sessions.  
+The main thread handles rendering and user interface, allowing smooth visuals without compromising input precision or game state integrity.
 
 ---
 
-## Project Structure
+## ✨ Features
 
-.
-├── index.html
-├── vite.config.ts
-└── src
-    ├── main.ts
-    ├── logic
-    │   ├── constants.ts
-    │   ├── engine.ts
-    │   ├── recover.ts
-    │   ├── rng.ts
-    │   ├── rules.ts
-    │   ├── types.ts
-    │   └── worker.ts
-    ├── renderer
-    │   ├── pixiRenderer.ts
-    │   └── renderAPI.ts
-    ├── tests
-    │   ├── integration
-    │   │   └── worker.test.ts
-    │   └── unit
-    │       ├── engine.test.ts
-    │       ├── rng.test.ts
-    │       └── rules.test.ts
-    └── ui
-        ├── accessibility.ts
-        ├── state.ts
-        └── input
-            ├── actions.ts
-            ├── gamepad.ts
-            ├── InputManager.ts
-            ├── keyboard.ts
-            └── touch.ts
+- 🧩 **Deterministic Engine** — every piece, tick, and frame follows a reproducible seed-based logic.
+- ⚙️ **Worker-Authoritative Architecture** — isolates game logic from rendering for clean concurrency.
+- 🎨 **Modern Rendering** — powered by **PixiJS**, enabling performant 2D graphics.
+- ♿ **Accessibility Built-In** — includes color-blind palettes, high-contrast mode, and patterned piece options.
+- 🧪 **Test Coverage** — validated with **Vitest** for predictable behavior and engine integrity.
+- 🧱 **Modular Design** — logic, renderer, and UI layers remain decoupled for easy extension.
 
 ---
 
-## Getting Started
+## 🏗️ Architecture
+
+```
+                ┌───────────────────────────┐
+                │         Renderer          │
+                │  (PixiJS + UI Layer)      │
+                └────────────┬──────────────┘
+                             │
+                     Message Bus / Events
+                             │
+                ┌────────────▼──────────────┐
+                │       Game Worker         │
+                │  (Deterministic Engine)   │
+                │  - Input Queue            │
+                │  - RNG & Seed Handling    │
+                │  - Frame Step Logic       │
+                └────────────┬──────────────┘
+                             │
+                         State Snapshots
+                             │
+                ┌────────────▼──────────────┐
+                │    Replay / Serialization │
+                └───────────────────────────┘
+```
+
+> _A full diagram is available at_ `docs/architecture.png` _(placeholder)_
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-
-*   Node.js (LTS version recommended)
-*   npm or yarn
+- Node.js ≥ 18  
+- npm or pnpm
 
 ### Installation
+```bash
+git clone https://github.com/Broken-Clock-AI/VibeCodeTris.git
+cd VibeCodeTris
+npm install
+```
 
-1.  Clone the repository:
-    `git clone <repository-url>`
-2.  Navigate to the project directory:
-    `cd VibeCodeTris`
-3.  Install dependencies:
-    `npm install`
+### Development
+```bash
+npm run dev
+```
+Launches a local development server via **Vite**.
 
-### Running the Development Server
-
-To start the Vite development server:
-
-`npm run dev`
-
-This will open the application in your default browser.
-
----
-
-## Testing
-
-The project uses Vitest for unit and integration testing. To run the test suite:
-
-`npm test`
+### Testing
+```bash
+npm run test
+```
+Runs the **Vitest** suite for deterministic logic validation.
 
 ---
 
-## Project Roadmap
+## 🧩 Roadmap
 
-Development will proceed in the following phases:
+| Phase | Focus Area | Status |
+|:------|:------------|:--------|
+| 1 | Core deterministic engine | ✅ Complete |
+| 2 | Worker integration | ✅ Complete |
+| 3 | Rendering layer (PixiJS) | ✅ Complete |
+| 4 | Accessibility features | ✅ Complete |
+| 5 | Advanced tooling & editor integration | 🚧 In Progress |
 
-*   **Phase 1: The Deterministic Core Engine**: Build and test the standalone game logic, including the engine, rules, and PRNG.
-*   **Phase 2: The Worker & Communication Layer**: Encapsulate the engine in a Web Worker and establish the resilient snapshot-based communication.
-*   **Phase 3: The Renderer & User Interface**: Develop the PixiJS renderer and UI components to visualize the game state and handle user input.
-*   **Phase 4: Verification, Tooling & Polish**: Implement the replay player and golden-file integration tests to guarantee end-to-end determinism.
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!  
+To propose changes:
+1. Fork the repository  
+2. Create a feature branch (`git checkout -b feature/new-idea`)  
+3. Commit and push your changes  
+4. Open a Pull Request  
+
+Please ensure tests pass before submission.
+
+---
+
+## 📄 License
+
+Released under the **MIT License**.  
+See [`LICENSE`](LICENSE) for details.
+
+---
+
+## 🧠 Credits
+
+Developed by **Broken Clock AI**  
+Special thanks to contributors and testers supporting deterministic game research.
+
+---
