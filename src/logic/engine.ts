@@ -181,6 +181,8 @@ export class TetrisEngine {
     if (!this.currentPiece || this.gameOver) return;
 
     let { x, y, matrix } = this.currentPiece;
+    const originalX = x;
+    const originalY = y;
 
     switch (action) {
         case 'moveLeft':
@@ -209,18 +211,29 @@ export class TetrisEngine {
             break;
         case 'hardDrop':
             // This will be handled by finding the final position and locking instantly
+            let distance = 0;
             while (isValidPosition(matrix, x, y + 1, this.board)) {
                 y++;
+                distance++;
             }
+            this.events.push({ type: 'hardDrop', tick: this.tickCounter, data: { type: this.currentPiece.type, distance } });
             this.currentPiece.y = y;
             this.lockPiece();
             return; // Exit early as lockPiece is called
         case 'rotateCW':
             matrix = rotateMatrix(matrix, 1);
+            if (isValidPosition(matrix, x, y, this.board)) {
+                this.currentPiece.matrix = matrix;
+                this.events.push({ type: 'pieceMoveRight', tick: this.tickCounter, data: { type: this.currentPiece.type, x: this.currentPiece.x, y: this.currentPiece.y } });
+            }
             // TODO: Add wall kick logic here
             break;
         case 'rotateCCW':
             matrix = rotateMatrix(matrix, -1);
+            if (isValidPosition(matrix, x, y, this.board)) {
+                this.currentPiece.matrix = matrix;
+                this.events.push({ type: 'pieceMoveLeft', tick: this.tickCounter, data: { type: this.currentPiece.type, x: this.currentPiece.x, y: this.currentPiece.y } });
+            }
             // TODO: Add wall kick logic here
             break;
         case 'hold':
@@ -229,6 +242,14 @@ export class TetrisEngine {
     }
 
     if (isValidPosition(matrix, x, y, this.board)) {
+        if (x < originalX) {
+            this.events.push({ type: 'pieceMoveLeft', tick: this.tickCounter, data: { type: this.currentPiece.type, x, y } });
+        } else if (x > originalX) {
+            this.events.push({ type: 'pieceMoveRight', tick: this.tickCounter, data: { type: this.currentPiece.type, x, y } });
+        }
+        if (y > originalY) {
+            this.events.push({ type: 'softDropTick', tick: this.tickCounter, data: { type: this.currentPiece.type, x, y } });
+        }
         this.currentPiece.x = x;
         this.currentPiece.y = y;
         this.currentPiece.matrix = matrix;
@@ -248,6 +269,7 @@ export class TetrisEngine {
             if ((this.dasCounter.left - this.das) % this.arr === 0) {
                 if (isValidPosition(this.currentPiece.matrix, this.currentPiece.x - 1, this.currentPiece.y, this.board)) {
                     this.currentPiece.x--;
+                    this.events.push({ type: 'pieceMoveLeft', tick: this.tickCounter, data: { type: this.currentPiece.type, x: this.currentPiece.x, y: this.currentPiece.y } });
                 }
             }
         }
@@ -260,6 +282,7 @@ export class TetrisEngine {
             if ((this.dasCounter.right - this.das) % this.arr === 0) {
                 if (isValidPosition(this.currentPiece.matrix, this.currentPiece.x + 1, this.currentPiece.y, this.board)) {
                     this.currentPiece.x++;
+                    this.events.push({ type: 'pieceMoveRight', tick: this.tickCounter, data: { type: this.currentPiece.type, x: this.currentPiece.x, y: this.currentPiece.y } });
                 }
             }
         }
@@ -272,6 +295,7 @@ export class TetrisEngine {
             if ((this.dasCounter.down - this.das) % this.arr === 0) {
                 if (isValidPosition(this.currentPiece.matrix, this.currentPiece.x, this.currentPiece.y + 1, this.board)) {
                     this.currentPiece.y++;
+                    this.events.push({ type: 'softDropTick', tick: this.tickCounter, data: { type: this.currentPiece.type, x: this.currentPiece.x, y: this.currentPiece.y } });
                 }
             }
         }

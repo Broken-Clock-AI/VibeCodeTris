@@ -94,8 +94,8 @@ describe('ReplayPlayer', () => {
 
   it('should process inputs at the correct tick', () => {
     const inputs: GameInput[] = [
-      { tick: 1, action: 'moveLeft' },
-      { tick: 3, action: 'rotateCW' },
+      { tick: 0, action: 'moveLeft' },
+      { tick: 2, action: 'rotateCW' },
     ];
     const replayData: ReplayData = { initialSeed: 1, inputs };
     const replayPlayer = new ReplayPlayer(replayData);
@@ -104,13 +104,13 @@ describe('ReplayPlayer', () => {
     replayPlayer.subscribe(snapshotCallback);
 
     // play() calls the first tick synchronously
-    replayPlayer.play(); // Tick 1
+    replayPlayer.play(); // Tick 0 -> process input, tickCounter becomes 1
     expect(engineInstance.handleInput).toHaveBeenCalledTimes(1);
     expect(engineInstance.handleInput).toHaveBeenNthCalledWith(1, 'moveLeft');
 
-    advanceFrame(); // Tick 2
+    advanceFrame(); // Tick 1 -> tickCounter becomes 2
     
-    advanceFrame(); // Tick 3
+    advanceFrame(); // Tick 2 -> process input, tickCounter becomes 3
     expect(engineInstance.handleInput).toHaveBeenCalledTimes(2);
     expect(engineInstance.handleInput).toHaveBeenNthCalledWith(2, 'rotateCW');
 

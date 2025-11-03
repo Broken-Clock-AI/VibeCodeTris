@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "NodeNext",
     "lib": ["ES2020", "DOM", "WebWorker"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "allowImportingTsExtensions": false,
-    "noEmit": true,
+    "noEmit": false,
+    "outDir": "dist",
     "types": ["vite/client", "jest", "node"]
   },
   "include": ["src/**/*.ts"],

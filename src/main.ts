@@ -13,18 +13,21 @@ async function main() {
 
     // Placeholder Audio Configuration (from VibeCodeTris_Procedural_Audio_Spec.md)
     const audioConfig: AudioConfig = {
-        meta: { name: "VibeCodeTris_Audio", tempo: 100, timeSignature: "4/4" },
+        meta: { name: "VibeCodeTris_Audio", tempo: 100, timeSignature: "4/4" as any },
         scales: {
             default: { root: 60, pattern: "majorPent" }, // C3 Major Pentatonic
         },
         instruments: [
-            { id: "pieceSpawnSynth", type: "synth", preset: { oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }, maxVoices: 6, gain: 0.6 },
-            { id: "pieceLockSynth", type: "synth", preset: { oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }, maxVoices: 6, gain: 0.7 },
-            { id: "lineClearSynth", type: "synth", preset: { oscillator: { type: "sine" }, envelope: { attack: 0.1, decay: 0.3, sustain: 0.1, release: 0.5 } }, maxVoices: 4, gain: 0.8 },
-            { id: "gameOverSynth", type: "synth", preset: { oscillator: { type: "sawtooth" }, envelope: { attack: 0.1, decay: 1, sustain: 0.5, release: 1 } }, maxVoices: 1, gain: 0.5 },
+            { id: "pieceSpawnSynth", type: "synth", preset: { harmonicity: 1.5, oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } } as any, maxVoices: 6, gain: 0.6 },
+            { id: "pieceLockSynth", type: "synth", preset: { pitchDecay: 0.05, octaves: 10, oscillator: { type: "sine" }, envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4 } } as any, maxVoices: 6, gain: 0.7 },
+            { id: "lineClearSynth", type: "synth", preset: { harmonicity: 1.2, modulationIndex: 10, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.8 } } as any, maxVoices: 4, gain: 0.8, effects: { sendReverb: 0.4 } },
+            { id: "gameOverSynth", type: "synth", preset: { oscillator: { type: "sawtooth" }, envelope: { attack: 0.1, decay: 1, sustain: 0.5, release: 1 } } as any, maxVoices: 1, gain: 0.5 },
+            // New synth for the Piece Melody system, designed for a short, percussive "pluck" sound.
+            { id: "pieceMovementSynth", type: "synth", preset: { oscillator: { type: "sine" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } } as any, maxVoices: 8, gain: 0.5 },
         ],
         rules: {
             pieceSpawn: {
+                id: "pieceSpawn",
                 instrumentId: "pieceSpawnSynth",
                 description: "Plays when a new piece spawns",
                 pitchSource: { type: "mapIndex", mapKey: "type" },
@@ -34,6 +37,7 @@ async function main() {
                 duration: "16n",
             },
             pieceLock: {
+                id: "pieceLock",
                 instrumentId: "pieceLockSynth",
                 description: "Plays when a piece locks",
                 pitchSource: { type: "random", maxIndex: 3 },
@@ -43,6 +47,7 @@ async function main() {
                 duration: "8n",
             },
             lineClear: {
+                id: "lineClear",
                 instrumentId: "lineClearSynth",
                 description: "Plays when lines are cleared",
                 pitchSource: { type: "random", maxIndex: 5 }, 
@@ -52,6 +57,7 @@ async function main() {
                 duration: "4n",
             },
             gameOver: {
+                id: "gameOver",
                 instrumentId: "gameOverSynth",
                 description: "Plays when game is over",
                 pitchSource: { type: "mapIndex", mapKey: "level" },
@@ -121,6 +127,7 @@ async function main() {
     };
 
     const startGame = async () => {
+        await audioEngine.initializeAudioContext();
         if (renderer) {
             renderer.destroy();
             renderer = null;
@@ -147,9 +154,9 @@ async function main() {
     // --- Get UI Elements ---
     const playButton = document.getElementById('play-button');
     const settingsButton = document.getElementById('settings-button');
-    const enableAudioButton = document.getElementById('enable-audio-button'); // New audio button
-    const testAudioButton = document.getElementById('test-audio-button');
-    const backButton = document.getElementById('back-button-settings');
+    const soundboardButton = document.getElementById('soundboard-button');
+    const backButtonSettings = document.getElementById('back-button-settings');
+    const backButtonSoundboard = document.getElementById('back-button-soundboard');
     const playAgainButton = document.getElementById('play-again-button');
     const mainMenuButton = document.getElementById('main-menu-button');
     const dasSlider = document.getElementById('das-slider') as HTMLInputElement;
@@ -164,7 +171,15 @@ async function main() {
     const solidPiecesCheckbox = document.getElementById('solid-pieces-checkbox') as HTMLInputElement;
     const ghostPieceCheckbox = document.getElementById('ghost-piece-checkbox') as HTMLInputElement;
 
-    if (!playButton || !settingsButton || !enableAudioButton || !testAudioButton || !backButton || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !blockStyleSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox) {
+    // Soundboard buttons
+    const testSpawnSynthButton = document.getElementById('test-spawn-synth');
+    const testLockSynthButton = document.getElementById('test-lock-synth');
+    const testClearSynthButton = document.getElementById('test-clear-synth');
+    const testMovementSynthButton = document.getElementById('test-movement-synth');
+    const testGameOverSynthButton = document.getElementById('test-gameover-synth');
+
+
+    if (!playButton || !settingsButton || !soundboardButton || !backButtonSettings || !backButtonSoundboard || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !blockStyleSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox || !testSpawnSynthButton || !testLockSynthButton || !testClearSynthButton || !testMovementSynthButton || !testGameOverSynthButton) {
         throw new Error('One or more UI elements not found');
     }
 
@@ -183,10 +198,41 @@ async function main() {
         uiManager.changeState(UIState.Settings);
         accessibilityManager.announce('Settings menu.');
     });
-    backButton.addEventListener('click', () => {
+    soundboardButton.addEventListener('click', () => {
+        uiManager.changeState(UIState.Soundboard);
+        accessibilityManager.announce('Soundboard menu.');
+    });
+    backButtonSettings.addEventListener('click', () => {
         uiManager.changeState(UIState.MainMenu);
         accessibilityManager.announce('Main menu.');
     });
+    backButtonSoundboard.addEventListener('click', () => {
+        uiManager.changeState(UIState.MainMenu);
+        accessibilityManager.announce('Main menu.');
+    });
+
+    // Soundboard listeners
+    testSpawnSynthButton.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        audioEngine.playSpawnSound();
+    });
+    testLockSynthButton.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        audioEngine.playLockSound();
+    });
+    testClearSynthButton.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        audioEngine.playClearSound();
+    });
+    testMovementSynthButton.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        audioEngine.playMovementSound();
+    });
+    testGameOverSynthButton.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        audioEngine.playGameOverSound();
+    });
+
     const updateTimings = () => {
         const das = parseInt(dasSlider.value, 10);
         const arr = parseInt(arrSlider.value, 10);
@@ -197,18 +243,6 @@ async function main() {
 
     dasSlider.addEventListener('input', updateTimings);
     arrSlider.addEventListener('input', updateTimings);
-
-    enableAudioButton.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        enableAudioButton.classList.add('hidden'); // Hide button after audio is enabled
-        accessibilityManager.announce('Audio enabled.');
-    });
-
-    testAudioButton.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        enableAudioButton.classList.add('hidden'); // Also hide the enable button
-        audioEngine.playTestSound();
-    });
 
     colorPaletteSelect.addEventListener('change', () => {
         uiManager.updateVisualSettings({ colorPalette: colorPaletteSelect.value as VisualSettings['colorPalette'] });

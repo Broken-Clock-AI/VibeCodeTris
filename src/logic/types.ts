@@ -5,7 +5,7 @@
  * at a specific tick.
  */
 export type GameEvent = {
-  type: 'lineClear' | 'tSpin' | 'backToBack' | 'combo' | 'spawn' | 'lock' | 'hold' | 'gameOver' | 'scoreUpdate';
+  type: 'lineClear' | 'tSpin' | 'backToBack' | 'combo' | 'pieceSpawn' | 'pieceLock' | 'hold' | 'gameOver' | 'scoreUpdate' | 'hardDrop' | 'pieceMoveRight' | 'pieceMoveLeft' | 'softDropTick';
   tick: number;
   data?: any;
 };

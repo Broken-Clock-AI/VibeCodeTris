@@ -5,6 +5,7 @@ export enum UIState {
     InGame,
     Settings,
     GameOver,
+    Soundboard,
 }
 
 export interface VisualSettings {
@@ -40,8 +41,9 @@ export class UIStateManager {
         const inGame = document.getElementById('in-game');
         const settings = document.getElementById('settings-screen');
         const gameOver = document.getElementById('game-over-screen');
+        const soundboard = document.getElementById('soundboard-screen');
 
-        if (!mainMenu || !inGame || !settings || !gameOver) {
+        if (!mainMenu || !inGame || !settings || !gameOver || !soundboard) {
             throw new Error('One or more UI view elements are missing from the DOM.');
         }
 
@@ -49,6 +51,7 @@ export class UIStateManager {
         this.viewElements.set(UIState.InGame, inGame);
         this.viewElements.set(UIState.Settings, settings);
         this.viewElements.set(UIState.GameOver, gameOver);
+        this.viewElements.set(UIState.Soundboard, soundboard);
 
         // Set the initial state visibility
         this.updateVisibility();
