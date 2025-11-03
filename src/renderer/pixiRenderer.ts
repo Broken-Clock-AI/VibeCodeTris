@@ -46,6 +46,7 @@ export class PixiRenderer {
     private constructor(uiManager: UIStateManager, accessibilityManager: AccessibilityManager, initialSettings: VisualSettings, audioEngine: AudioEngine) {
         this.app = new PIXI.Application();
         this.boardContainer = new PIXI.Container();
+        this.pieceOutlineContainer = new PIXI.Graphics();
         this.uiManager = uiManager;
         this.accessibilityManager = accessibilityManager;
         this.visualSettings = initialSettings;
@@ -216,16 +217,17 @@ export class PixiRenderer {
             if (snapshot.gameOver) {
                 this.uiManager.changeState(UIState.GameOver);
                 const finalScoreEl = document.getElementById('final-score');
-                if (finalScoreEl) {
-                    finalScoreEl.textContent = snapshot.score.toString();
-                }
-                this.app.ticker.stop();
-                return;
-            }
-            this.drawBoard(snapshot);
-            this.handleGameEvents(snapshot.events);
-            this.audioEngine.handleSnapshot(snapshot);
-        });
+          if (finalScoreEl) {
+              finalScoreEl.textContent = snapshot.score.toString();
+          }
+          this.audioEngine.handleSnapshot(snapshot); // Process events one last time
+          this.app.ticker.stop();
+          return;
+      }
+      this.drawBoard(snapshot);
+      this.handleGameEvents(snapshot.events);
+      this.audioEngine.handleSnapshot(snapshot);
+  });
 
         renderAPI.on('log', (log) => {
             console.log(`[WORKER LOG ${log.level.toUpperCase()}]: ${log.msg}`);

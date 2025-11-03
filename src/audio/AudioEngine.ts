@@ -24,8 +24,8 @@ class SeededRNG {
 
 // --- Scale & Pitch Mapping (from spec) ---
 class Scale {
+  public pattern: number[];
   private root: number;
-  private pattern: number[];
 
   constructor(rootMidi: number, patternName: keyof typeof SCALES) {
     this.root = rootMidi;
@@ -33,7 +33,8 @@ class Scale {
   }
 
   quantize(index: number): number {
-    const degree = index % this.pattern.length;
+    // This calculation correctly handles negative indices by wrapping them.
+    const degree = ((index % this.pattern.length) + this.pattern.length) % this.pattern.length;
     const octave = Math.floor(index / this.pattern.length);
     return this.root + this.pattern[degree] + octave * 12;
   }
@@ -48,6 +49,7 @@ class Instrument {
   private pool: (ToneSynth | TonePolySynth)[];
   private maxVoices: number;
   private gainNode: ToneGain;
+  private reverb?: Tone.Reverb;
 
   constructor(id: string, opts: InstrumentConfig) {
     this.id = id;
@@ -55,38 +57,56 @@ class Instrument {
     this.maxVoices = opts.maxVoices || 8;
     this.gainNode = new Tone.Gain(opts.gain || 0.8).toDestination();
     this.pool = [];
+
+    if (opts.effects?.sendReverb) {
+        this.reverb = new Tone.Reverb({
+            decay: 4,
+            preDelay: 0.01,
+            wet: opts.effects.sendReverb
+        }).connect(this.gainNode);
+    }
   }
 
-  trigger(noteMidi: number | number[], velocity: number = 0.8, dur: ToneUnit.Time = '8n', when: ToneUnit.Time, params: any = {}) {
+  trigger(noteMidi: number | number[], velocity: number = 0.8, dur: ToneUnit.Time = '8n', when?: ToneUnit.Time, params: any = {}) {
     const isChord = Array.isArray(noteMidi);
     const freqs = isChord ? noteMidi.map(m => this.midiToFreq(m)) : this.midiToFreq(noteMidi);
+    const safeWhen = when ?? Tone.now();
 
     let voice;
     if (isChord) {
-        voice = new Tone.PolySynth(Tone.Synth, this.opts.preset || {}).connect(this.gainNode);
+        voice = new Tone.PolySynth(Tone.Synth, this.opts.preset || {}).connect(this.reverb || this.gainNode);
     } else {
         voice = this.pool.find(v => !(v as any).isPlaying);
         if (!voice) {
             if (this.pool.length < this.maxVoices) {
-                voice = new Tone.Synth(this.opts.preset || {}).connect(this.gainNode);
+                voice = new Tone.Synth(this.opts.preset || {}).connect(this.reverb || this.gainNode);
                 this.pool.push(voice);
             } else {
+                // Voice stealing: re-use the oldest voice (at the front of the array) without disposing it.
                 voice = this.pool.shift()!;
-                voice.dispose();
-                voice = new Tone.Synth(this.opts.preset || {}).connect(this.gainNode);
-                this.pool.push(voice);
+                this.pool.push(voice); // Move it to the end of the array to mark it as most recently used.
             }
         }
     }
     
-    voice.triggerAttackRelease(freqs, dur, when, velocity);
+    // Explicitly schedule attack and release to avoid internal Tone.js timing issues with long notes.
+    const durationInSeconds = Tone.Time(dur).toSeconds();
+    voice.triggerAttack(freqs as any, safeWhen, velocity);
+    if (durationInSeconds > 0) {
+        voice.triggerRelease(safeWhen + durationInSeconds);
+    }
 
     if (!isChord) {
         (voice as any).isPlaying = true;
-        setTimeout(() => { (voice as any).isPlaying = false; }, Tone.Time(dur).toMilliseconds());
+        // Set the voice to be not playing slightly after its duration to account for the release phase.
+        setTimeout(() => { 
+            (voice as any).isPlaying = false; 
+        }, Tone.Time(dur).toMilliseconds() + 50);
     } else {
-        // For PolySynth, dispose after the duration to clean up resources
-        setTimeout(() => { voice.dispose(); }, Tone.Time(dur).toMilliseconds() + 100);
+        // For the temporary PolySynth, dispose after the duration to clean up resources
+        setTimeout(() => { 
+            voice.dispose(); 
+        }, Tone.Time(dur).toMilliseconds() + 100);
     }
   }
 
@@ -102,6 +122,8 @@ class RulesEngine {
   private config: { [key: string]: EventRuleConfig };
   private scale: Scale;
   private rng: SeededRNG;
+  private activePieceRootIndex: number | null = null;
+  private activePieceCurrentIndex: number | null = null;
 
   constructor(config: { [key: string]: EventRuleConfig }, scale: Scale, rng: SeededRNG) {
     this.config = config;
@@ -110,17 +132,81 @@ class RulesEngine {
   }
 
   handleEvent(ev: any, gameState: any) {
-    console.log(`[AudioEngine] Handling event:`, ev);
     const rule = this.config[ev.type];
-    if (!rule) {
-        console.log(`[AudioEngine] No rule found for event type: ${ev.type}`);
+    // A rule isn't required for the new piece melody events, so we check for that.
+    if (!rule && !['pieceMoveLeft', 'pieceMoveRight', 'softDropTick', 'hardDrop'].includes(ev.type)) {
         return;
     }
-    console.log(`[AudioEngine] Found rule:`, rule);
+
+    // --- Piece Melody System ---
+    // This new system handles piece-specific sounds dynamically.
+    switch (ev.type) {
+        case 'pieceSpawn':
+            const rootIndex = this.mapPitch(this.config.pieceSpawn.pitchSource, ev, gameState);
+            this.activePieceRootIndex = rootIndex;
+            this.activePieceCurrentIndex = rootIndex;
+            break;
+        
+        case 'pieceMoveLeft':
+            if (this.activePieceCurrentIndex !== null) {
+                this.activePieceCurrentIndex--; // Create progression
+                const midi = this.scale.quantize(this.activePieceCurrentIndex);
+                const instrument = Instruments.get('pieceMovementSynth');
+                if (instrument) instrument.trigger(midi, 0.6, '16n', this.alignToSlot({ mode: 'onBeat', slot: '16n' }));
+            }
+            return;
+
+        case 'pieceMoveRight':
+            if (this.activePieceCurrentIndex !== null) {
+                this.activePieceCurrentIndex++; // Create progression
+                const midi = this.scale.quantize(this.activePieceCurrentIndex);
+                const instrument = Instruments.get('pieceMovementSynth');
+                if (instrument) instrument.trigger(midi, 0.6, '16n', this.alignToSlot({ mode: 'onBeat', slot: '16n' }));
+            }
+            return;
+        
+        case 'softDropTick':
+             if (this.activePieceRootIndex !== null) {
+                const midi = this.scale.quantize(this.activePieceRootIndex - Math.floor(this.rng.nextRange(0, 3))); 
+                const instrument = Instruments.get('pieceMovementSynth');
+                if (instrument) instrument.trigger(midi, 0.3, '32n', this.alignToSlot({ mode: 'onBeat', slot: '32n' }));
+            }
+            return;
+
+        case 'hardDrop':
+            if (this.activePieceRootIndex !== null) {
+                const root = this.scale.quantize(this.activePieceRootIndex);
+                const arpeggio = [root, this.scale.quantize(this.activePieceRootIndex - 2), this.scale.quantize(this.activePieceRootIndex - 4), this.scale.quantize(this.activePieceRootIndex - 7)];
+                const instrument = Instruments.get('pieceMovementSynth');
+                if (instrument) {
+                    const now = Tone.now();
+                    instrument.trigger(arpeggio[0], 0.9, '16n', now);
+                    instrument.trigger(arpeggio[1], 0.8, '16n', now + 0.05);
+                    instrument.trigger(arpeggio[2], 0.7, '16n', now + 0.1);
+                    instrument.trigger(arpeggio[3], 0.6, '16n', now + 0.15);
+                }
+            }
+            return;
+
+        case 'pieceLock':
+            if (this.activePieceRootIndex !== null) {
+                const midi = this.scale.quantize(this.activePieceRootIndex); // Use original root note
+                const instrument = Instruments.get(rule.instrumentId);
+                if (instrument) instrument.trigger(midi, 0.9, rule.duration || '8n', this.alignToSlot(rule.rhythm));
+                
+                // Reset state for the next piece
+                this.activePieceRootIndex = null;
+                this.activePieceCurrentIndex = null;
+                return;
+            }
+            break;
+    }
+
+    // --- Generic Rule Handler ---
+    if (!rule) return;
 
     const p = this.rng.next();
     if (p > (rule.probability || 1)) {
-        console.log(`[AudioEngine] Probability check failed (${p} > ${rule.probability || 1}). Skipping.`);
         return;
     }
 
@@ -128,46 +214,45 @@ class RulesEngine {
     let vel = rule.velocity ? this.rng.nextRange(rule.velocity.min, rule.velocity.max) : 0.8;
 
     if (ev.type === 'lineClear') {
+        const instrument = Instruments.get(rule.instrumentId);
+        if (!instrument) {
+            console.error(`[AudioEngine] Instrument not found: ${rule.instrumentId}`);
+            return;
+        }
+
         const basePitchIndex = this.mapPitch(rule.pitchSource, ev, gameState);
         const rootNote = this.scale.quantize(basePitchIndex + (rule.pitchOffset || 0));
         const lineCount = ev.data.count;
         
+        let chord: number[];
         const majorTriad = [rootNote, rootNote + 4, rootNote + 7];
         
         switch (lineCount) {
-            case 1: // Single
-                midi = majorTriad;
-                vel = 0.7;
-                break;
-            case 2: // Double
-                midi = [...majorTriad, rootNote + 12]; // Add octave
-                vel = 0.8;
-                break;
-            case 3: // Triple
-                midi = [...majorTriad, rootNote + 11]; // Major 7th
-                vel = 0.9;
-                break;
-            case 4: // Tetris
-                midi = [...majorTriad, rootNote + 11, rootNote + 12]; // Major 7th + octave
-                vel = 1.0;
-                break;
-            default:
-                midi = majorTriad;
-                vel = 0.7;
-                break;
+            case 1: chord = majorTriad; vel = 0.7; break;
+            case 2: chord = [...majorTriad, rootNote + 12]; vel = 0.8; break;
+            case 3: chord = [...majorTriad, rootNote + 11]; vel = 0.9; break;
+            case 4: chord = [...majorTriad, rootNote + 11, rootNote + 12]; vel = 1.0; break;
+            default: chord = majorTriad; vel = 0.7; break;
         }
+
+        // Play an arpeggio instead of a block chord
+        const now = Tone.now();
+        chord.forEach((note, i) => {
+            instrument.trigger(note, vel, '8n', now + i * 0.05);
+        });
+        return; // Skip the generic trigger at the end
     } else {
-        const pitchIndex = this.mapPitch(rule.pitchSource, ev, gameState);
+        // For pieceSpawn, use the newly set current index
+        const pitchIndex = ev.type === 'pieceSpawn' && this.activePieceCurrentIndex !== null 
+            ? this.activePieceCurrentIndex 
+            : this.mapPitch(rule.pitchSource, ev, gameState);
         midi = this.scale.quantize(pitchIndex + (rule.pitchOffset || 0));
     }
 
     const when = this.alignToSlot(rule.rhythm);
 
-    console.log(`[AudioEngine] Calculated audio parameters:`, { midi, when, vel });
-
     const instrument = Instruments.get(rule.instrumentId);
     if (instrument) {
-        console.log(`[AudioEngine] Triggering instrument '${rule.instrumentId}'`);
         instrument.trigger(midi, vel, rule.duration || '8n', when);
     } else {
         console.error(`[AudioEngine] Instrument not found: ${rule.instrumentId}`);
@@ -239,6 +324,8 @@ export class AudioEngine {
   private masterGain: ToneGain | null = null;
   private initialized: boolean = false;
   private config: AudioConfig;
+  private lastVolume: number = 1;
+  private isGameOverSoundPlayed: boolean = false;
 
   constructor(gameSeed: number, config: AudioConfig) {
     this.rng = new SeededRNG(gameSeed);
@@ -266,7 +353,6 @@ export class AudioEngine {
     this.rulesEngine = new RulesEngine(this.config.rules, scale, this.rng);
     
     Tone.Transport.start("+0.1");
-    console.log("AudioContext initialized and Tone.Transport started.");
   }
 
   public playTestSound() {
@@ -274,19 +360,73 @@ export class AudioEngine {
           console.warn("AudioEngine not initialized. Cannot play test sound.");
           return;
       }
-      console.log("Attempting to play test sound...");
       const testInstrument = Instruments.get("pieceSpawnSynth");
       if (testInstrument) {
           const now = Tone.now();
           testInstrument.trigger(60, 0.8, '8n', now); // Play a C4 note
-          console.log("Test sound triggered on instrument 'pieceSpawnSynth'.");
       } else {
           console.error("Test sound failed: 'pieceSpawnSynth' instrument not found.");
       }
   }
 
+  public playSpawnSound() {
+    if (!this.initialized) return;
+    const instrument = Instruments.get("pieceSpawnSynth");
+    if (instrument) instrument.trigger(60, 0.8, '8n', Tone.now());
+  }
+
+  public playLockSound() {
+      if (!this.initialized) return;
+      const instrument = Instruments.get("pieceLockSynth");
+      if (instrument) instrument.trigger(55, 0.9, '8n', Tone.now());
+  }
+
+  public playClearSound() {
+      if (!this.initialized) return;
+      const instrument = Instruments.get("lineClearSynth");
+      if (instrument) {
+          const now = Tone.now();
+          const chord = [60, 64, 67]; // C Major triad
+          chord.forEach((note, i) => {
+              instrument.trigger(note, 0.8, '8n', now + i * 0.05);
+          });
+      }
+  }
+
+  public playMovementSound() {
+      if (!this.initialized) return;
+      const instrument = Instruments.get("pieceMovementSynth");
+      if (instrument) instrument.trigger(72, 0.6, '16n', Tone.now());
+  }
+
+  public playGameOverSound() {
+      if (!this.initialized) return;
+      const instrument = Instruments.get("gameOverSynth");
+      if (instrument) {
+          const now = Tone.now();
+          // Descending C minor arpeggio over 2 octaves
+          const arpeggio = [72, 67, 63, 60, 55, 51, 48]; 
+          const duration = '8n';
+          arpeggio.forEach((note, i) => {
+              // Decrease velocity for each note to create a fade-out effect
+              const velocity = 1.0 - (i * 0.1); 
+              instrument.trigger(note, velocity, duration, now + i * 0.12);
+          });
+      }
+  }
+
   public handleSnapshot(snapshot: Snapshot) {
     if (!this.initialized || !this.rulesEngine) return;
+
+    if (snapshot.gameOver) {
+        if (!this.isGameOverSoundPlayed) {
+            this.playGameOverSound();
+            this.isGameOverSoundPlayed = true;
+        }
+        return;
+    } else {
+        this.isGameOverSoundPlayed = false;
+    }
 
     snapshot.events.forEach(event => {
       this.rulesEngine!.handleEvent(event, snapshot);
@@ -304,11 +444,17 @@ export class AudioEngine {
 
   public setMasterVolume(volume: number) {
     if (!this.masterGain) return;
+    this.lastVolume = volume;
     this.masterGain.gain.value = volume;
   }
 
   public toggleMute(mute: boolean) {
     if (!this.masterGain) return;
-    this.masterGain.mute = mute;
+    if (mute) {
+        this.lastVolume = this.masterGain.gain.value;
+        this.masterGain.gain.value = 0;
+    } else {
+        this.masterGain.gain.value = this.lastVolume;
+    }
   }
 }
