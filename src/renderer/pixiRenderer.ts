@@ -2,7 +2,7 @@
 import * as PIXI from 'pixi.js';
 import { renderAPI } from './renderAPI';
 import { COLS, ROWS } from '../logic/constants';
-import { GameEvent, Snapshot } from '../logic/types';
+import { GameEvent, Snapshot, GameStatus } from '../logic/types';
 import { UIStateManager, UIState, VisualSettings } from '../ui/state';
 import { AccessibilityManager } from '../ui/accessibility';
 import { AudioEngine } from '../audio/AudioEngine';
@@ -29,10 +29,13 @@ const THEMES = {
     ],
 };
 
+const LINE_CLEAR_DELAY_TICKS = 28; // Must match engine value
+
 export class PixiRenderer {
     public app: PIXI.Application;
     private boardContainer: PIXI.Container;
     private pieceOutlineContainer: PIXI.Graphics;
+    private lineClearContainer: PIXI.Graphics;
     private boardBlocks: PIXI.Graphics[] = [];
     private patternSprites: PIXI.Sprite[] = [];
     private uiManager: UIStateManager;
@@ -47,6 +50,7 @@ export class PixiRenderer {
         this.app = new PIXI.Application();
         this.boardContainer = new PIXI.Container();
         this.pieceOutlineContainer = new PIXI.Graphics();
+        this.lineClearContainer = new PIXI.Graphics();
         this.uiManager = uiManager;
         this.accessibilityManager = accessibilityManager;
         this.visualSettings = initialSettings;
@@ -150,10 +154,8 @@ export class PixiRenderer {
                 return;
             }
             const g = new PIXI.Graphics();
-            // Set the bounds of the texture to the full block size by drawing a transparent rectangle.
-            // This ensures the pattern is centered within the texture.
             g.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE).fill({ color: 0xffffff, alpha: 0 });
-            p(g); // Now draw the actual pattern on top.
+            p(g);
             const texture = this.app.renderer.generateTexture(g);
             this.patternTextures.push(texture);
             g.destroy();
@@ -163,13 +165,11 @@ export class PixiRenderer {
     private initBoard() {
         for (let y = 0; y < ROWS; y++) {
             for (let x = 0; x < COLS; x++) {
-                // Base color block
                 const block = new PIXI.Graphics();
                 block.position.set(x * BLOCK_SIZE, y * BLOCK_SIZE);
                 this.boardContainer.addChild(block);
                 this.boardBlocks.push(block);
 
-                // Pattern sprite (overlay)
                 const patternSprite = new PIXI.Sprite(PIXI.Texture.EMPTY);
                 patternSprite.position.set(x * BLOCK_SIZE, y * BLOCK_SIZE);
                 patternSprite.visible = false;
@@ -177,8 +177,8 @@ export class PixiRenderer {
                 this.patternSprites.push(patternSprite);
             }
         }
-        this.pieceOutlineContainer = new PIXI.Graphics();
         this.boardContainer.addChild(this.pieceOutlineContainer);
+        this.boardContainer.addChild(this.lineClearContainer);
     }
 
     private handleGameEvents(events: GameEvent[]) {
@@ -205,7 +205,6 @@ export class PixiRenderer {
         renderAPI.on('snapshot', (snapshot) => {
             this.lastSnapshot = snapshot;
 
-            // --- Update Core UI ---
             const scoreEl = document.getElementById('score-value');
             const levelEl = document.getElementById('level-value');
             const linesEl = document.getElementById('lines-value');
@@ -214,20 +213,21 @@ export class PixiRenderer {
             if (levelEl) levelEl.textContent = snapshot.level.toString();
             if (linesEl) linesEl.textContent = snapshot.lines.toString();
             
-            if (snapshot.gameOver) {
+            if (snapshot.status === GameStatus.GameOver) {
                 this.uiManager.changeState(UIState.GameOver);
                 const finalScoreEl = document.getElementById('final-score');
-          if (finalScoreEl) {
-              finalScoreEl.textContent = snapshot.score.toString();
-          }
-          this.audioEngine.handleSnapshot(snapshot); // Process events one last time
-          this.app.ticker.stop();
-          return;
-      }
-      this.drawBoard(snapshot);
-      this.handleGameEvents(snapshot.events);
-      this.audioEngine.handleSnapshot(snapshot);
-  });
+                if (finalScoreEl) {
+                    finalScoreEl.textContent = snapshot.score.toString();
+                }
+                this.audioEngine.handleSnapshot(snapshot);
+                this.app.ticker.stop();
+                return;
+            }
+
+            this.drawBoard(snapshot);
+            this.handleGameEvents(snapshot.events);
+            this.audioEngine.handleSnapshot(snapshot);
+        });
 
         renderAPI.on('log', (log) => {
             console.log(`[WORKER LOG ${log.level.toUpperCase()}]: ${log.msg}`);
@@ -240,8 +240,7 @@ export class PixiRenderer {
     }
 
     private drawBlock(block: PIXI.Graphics, color: number, colorIndex: number, solid: boolean) {
-        const { blockStyle } = this.visualSettings;
-        const { highContrast } = this.visualSettings;
+        const { blockStyle, highContrast } = this.visualSettings;
         const strokeColor = highContrast ? 0xFFFFFF : 0x333333;
 
         block.clear();
@@ -265,28 +264,20 @@ export class PixiRenderer {
 
             case 'faceted-gem':
                 if (colorIndex > 0) {
-                    // Deconstruct the hex color into R, G, B components
                     const r = (color >> 16) & 0xFF;
                     const g = (color >> 8) & 0xFF;
                     const b = color & 0xFF;
-
-                    // Calculate the four facet colors by multiplying RGB components
                     const clamp = (val: number) => Math.min(255, Math.floor(val));
                     const highlightColor = (clamp(r * 1.5) << 16) + (clamp(g * 1.5) << 8) + clamp(b * 1.5);
                     const lightColor = (clamp(r * 1.2) << 16) + (clamp(g * 1.2) << 8) + clamp(b * 1.2);
                     const midToneColor = (clamp(r * 0.9) << 16) + (clamp(g * 0.9) << 8) + clamp(b * 0.9);
                     const shadowColor = (clamp(r * 0.6) << 16) + (clamp(g * 0.6) << 8) + clamp(b * 0.6);
                     const borderColor = (clamp(r * 0.5) << 16) + (clamp(g * 0.5) << 8) + clamp(b * 0.5);
-                    
                     const center = BLOCK_SIZE / 2;
-
-                    // Draw the four facets (triangles)
-                    block.moveTo(0, 0).lineTo(center, center).lineTo(0, BLOCK_SIZE).closePath().fill(highlightColor); // Left
-                    block.moveTo(0, 0).lineTo(BLOCK_SIZE, 0).lineTo(center, center).closePath().fill(lightColor);     // Top
-                    block.moveTo(BLOCK_SIZE, 0).lineTo(BLOCK_SIZE, BLOCK_SIZE).lineTo(center, center).closePath().fill(midToneColor); // Right
-                    block.moveTo(0, BLOCK_SIZE).lineTo(center, center).lineTo(BLOCK_SIZE, BLOCK_SIZE).closePath().fill(shadowColor); // Bottom
-                    
-                    // Draw a border using a darker shade of the base color on top of the facets
+                    block.moveTo(0, 0).lineTo(center, center).lineTo(0, BLOCK_SIZE).closePath().fill(highlightColor);
+                    block.moveTo(0, 0).lineTo(BLOCK_SIZE, 0).lineTo(center, center).closePath().fill(lightColor);
+                    block.moveTo(BLOCK_SIZE, 0).lineTo(BLOCK_SIZE, BLOCK_SIZE).lineTo(center, center).closePath().fill(midToneColor);
+                    block.moveTo(0, BLOCK_SIZE).lineTo(center, center).lineTo(BLOCK_SIZE, BLOCK_SIZE).closePath().fill(shadowColor);
                     block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE).stroke({ width: BORDER_WIDTH, color: borderColor, alpha: 1 });
                 }
                 break;
@@ -303,7 +294,7 @@ export class PixiRenderer {
     }
 
     private drawBoard(snapshot: Snapshot) {
-        if (!this.app.renderer) return; // Guard against calls before renderer is ready
+        if (!this.app.renderer) return;
 
         const { colorPalette, highContrast, distinctPatterns, pieceOutline, solidPieces, isGhostPieceEnabled } = this.visualSettings;
         const colors = THEMES[colorPalette] || THEMES.default;
@@ -311,13 +302,17 @@ export class PixiRenderer {
 
         this.app.renderer.background.color = bgColor;
         this.pieceOutlineContainer.clear();
+        this.lineClearContainer.clear();
 
         const board = new Uint8Array(snapshot.boardBuffer);
+
+        // 1. Draw the entire board from the buffer, ensuring all blocks are visible initially.
         for (let i = 0; i < board.length; i++) {
             const colorIndex = board[i];
             const block = this.boardBlocks[i];
             const patternSprite = this.patternSprites[i];
             
+            block.visible = true; // Ensure visibility before drawing
             this.drawBlock(block, colors[colorIndex], colorIndex, solidPieces);
 
             if (distinctPatterns && colorIndex > 0) {
@@ -328,12 +323,42 @@ export class PixiRenderer {
             }
         }
 
+        // 2. If in LineClearAnimation state, apply the "center-out" hiding effect.
+        if (snapshot.status === GameStatus.LineClearAnimation && snapshot.clearedLines) {
+            const progress = 1 - (snapshot.lineClearDelay / LINE_CLEAR_DELAY_TICKS); // Progress from 0 to 1
+            const step = Math.floor(progress * (COLS / 2 + 1)); // Determine how many pairs of blocks to hide
+
+            for (const row of snapshot.clearedLines) {
+                for (let i = 0; i < COLS / 2; i++) {
+                    if (i < step) {
+                        // Calculate columns from the center outwards
+                        const leftCol = Math.floor(COLS / 2) - 1 - i;
+                        const rightCol = Math.ceil(COLS / 2) + i;
+
+                        // Hide the blocks
+                        const leftIndex = row * COLS + leftCol;
+                        if (leftIndex >= 0 && leftIndex < this.boardBlocks.length) {
+                            this.boardBlocks[leftIndex].visible = false;
+                            this.patternSprites[leftIndex].visible = false;
+                        }
+
+                        const rightIndex = row * COLS + rightCol;
+                        if (rightIndex >= 0 && rightIndex < this.boardBlocks.length) {
+                            this.boardBlocks[rightIndex].visible = false;
+                            this.patternSprites[rightIndex].visible = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Draw the current piece and ghost piece over the board state.
         if (snapshot.current) {
             const piece = snapshot.current;
             const matrix = new Uint8Array(piece.matrix);
             const shapeSize = Math.sqrt(matrix.length);
 
-            // Draw Ghost Piece first so the active piece is on top
+            // Draw Ghost Piece
             if (isGhostPieceEnabled && piece.ghostY !== undefined && piece.ghostY > piece.y) {
                 for (let r = 0; r < shapeSize; r++) {
                     for (let c = 0; c < shapeSize; c++) {
@@ -342,9 +367,8 @@ export class PixiRenderer {
                             const boardY = piece.ghostY + r;
                             const blockIndex = boardY * COLS + boardX;
 
-                            if (blockIndex >= 0 && blockIndex < this.boardBlocks.length) {
+                            if (blockIndex >= 0 && blockIndex < this.boardBlocks.length && this.boardBlocks[blockIndex].visible) {
                                 const block = this.boardBlocks[blockIndex];
-                                // Draw ghost piece with transparency
                                 block.clear();
                                 block.rect(0, 0, BLOCK_SIZE, BLOCK_SIZE);
                                 block.fill({ color: colors[piece.colorIndex], alpha: 0.4 });
@@ -357,7 +381,7 @@ export class PixiRenderer {
                 }
             }
 
-            // Draw Active Piece
+            // Draw Current Piece
             for (let r = 0; r < shapeSize; r++) {
                 for (let c = 0; c < shapeSize; c++) {
                     if (matrix[r * shapeSize + c]) {
@@ -369,6 +393,7 @@ export class PixiRenderer {
                             const block = this.boardBlocks[blockIndex];
                             const patternSprite = this.patternSprites[blockIndex];
 
+                            block.visible = true;
                             this.drawBlock(block, colors[piece.colorIndex], piece.colorIndex, solidPieces);
 
                             if (distinctPatterns && piece.colorIndex > 0) {
@@ -382,6 +407,7 @@ export class PixiRenderer {
                 }
             }
 
+            // Draw Piece Outline
             if (pieceOutline) {
                 this.pieceOutlineContainer.clear();
                 this.pieceOutlineContainer.setStrokeStyle({ width: 3, color: 0xFFFFFF, alpha: 1 });
@@ -394,25 +420,18 @@ export class PixiRenderer {
                             const screenX = boardX * BLOCK_SIZE;
                             const screenY = boardY * BLOCK_SIZE;
 
-                            // Check top
-                            if (r === 0 || !matrix[(r - 1) * shapeSize + c]) {
-                                this.pieceOutlineContainer.moveTo(screenX, screenY);
-                                this.pieceOutlineContainer.lineTo(screenX + BLOCK_SIZE, screenY);
+                            // Draw lines on the outer edges of the piece
+                            if (r === 0 || !matrix[(r - 1) * shapeSize + c]) { // Top edge
+                                this.pieceOutlineContainer.moveTo(screenX, screenY).lineTo(screenX + BLOCK_SIZE, screenY);
                             }
-                            // Check bottom
-                            if (r === shapeSize - 1 || !matrix[(r + 1) * shapeSize + c]) {
-                                this.pieceOutlineContainer.moveTo(screenX, screenY + BLOCK_SIZE);
-                                this.pieceOutlineContainer.lineTo(screenX + BLOCK_SIZE, screenY + BLOCK_SIZE);
+                            if (r === shapeSize - 1 || !matrix[(r + 1) * shapeSize + c]) { // Bottom edge
+                                this.pieceOutlineContainer.moveTo(screenX, screenY + BLOCK_SIZE).lineTo(screenX + BLOCK_SIZE, screenY + BLOCK_SIZE);
                             }
-                            // Check left
-                            if (c === 0 || !matrix[r * shapeSize + (c - 1)]) {
-                                this.pieceOutlineContainer.moveTo(screenX, screenY);
-                                this.pieceOutlineContainer.lineTo(screenX, screenY + BLOCK_SIZE);
+                            if (c === 0 || !matrix[r * shapeSize + (c - 1)]) { // Left edge
+                                this.pieceOutlineContainer.moveTo(screenX, screenY).lineTo(screenX, screenY + BLOCK_SIZE);
                             }
-                            // Check right
-                            if (c === shapeSize - 1 || !matrix[r * shapeSize + (c + 1)]) {
-                                this.pieceOutlineContainer.moveTo(screenX + BLOCK_SIZE, screenY);
-                                this.pieceOutlineContainer.lineTo(screenX + BLOCK_SIZE, screenY + BLOCK_SIZE);
+                            if (c === shapeSize - 1 || !matrix[r * shapeSize + (c + 1)]) { // Right edge
+                                this.pieceOutlineContainer.moveTo(screenX + BLOCK_SIZE, screenY).lineTo(screenX + BLOCK_SIZE, screenY + BLOCK_SIZE);
                             }
                         }
                     }
@@ -426,7 +445,8 @@ export class PixiRenderer {
 
     public start() {
         const seed = Math.floor(Math.random() * 1_000_000_000);
-        renderAPI.start(seed);
+        const settings = this.uiManager.getVisualSettings();
+        renderAPI.start(seed, settings);
         console.log(`Renderer started. Requesting engine start with seed: ${seed}`);
     }
 

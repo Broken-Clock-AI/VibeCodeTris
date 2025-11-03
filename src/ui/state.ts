@@ -16,6 +16,7 @@ export interface VisualSettings {
     pieceOutline: boolean;
     solidPieces: boolean;
     isGhostPieceEnabled: boolean;
+    isLineClearAnimationEnabled: boolean;
 }
 
 export class UIStateManager {

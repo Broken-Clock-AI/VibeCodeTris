@@ -21,7 +21,7 @@ async function main() {
             { id: "pieceSpawnSynth", type: "synth", preset: { harmonicity: 1.5, oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } } as any, maxVoices: 6, gain: 0.6 },
             { id: "pieceLockSynth", type: "synth", preset: { pitchDecay: 0.05, octaves: 10, oscillator: { type: "sine" }, envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4 } } as any, maxVoices: 6, gain: 0.7 },
             { id: "lineClearSynth", type: "synth", preset: { harmonicity: 1.2, modulationIndex: 10, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.8 } } as any, maxVoices: 4, gain: 0.8, effects: { sendReverb: 0.4 } },
-            { id: "gameOverSynth", type: "synth", preset: { oscillator: { type: "sawtooth" }, envelope: { attack: 0.1, decay: 1, sustain: 0.5, release: 1 } } as any, maxVoices: 1, gain: 0.5 },
+            { id: "gameOverSynth", type: "synth", preset: { oscillator: { type: "triangle" }, envelope: { attack: 0.05, decay: 0.8, sustain: 0.2, release: 1.0 } } as any, maxVoices: 1, gain: 0.5, effects: { sendReverb: 0.4 } },
             // New synth for the Piece Melody system, designed for a short, percussive "pluck" sound.
             { id: "pieceMovementSynth", type: "synth", preset: { oscillator: { type: "sine" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } } as any, maxVoices: 8, gain: 0.5 },
         ],
@@ -170,6 +170,7 @@ async function main() {
     const pieceOutlineCheckbox = document.getElementById('piece-outline-checkbox') as HTMLInputElement;
     const solidPiecesCheckbox = document.getElementById('solid-pieces-checkbox') as HTMLInputElement;
     const ghostPieceCheckbox = document.getElementById('ghost-piece-checkbox') as HTMLInputElement;
+    const animatedLineClearCheckbox = document.getElementById('animated-line-clear-checkbox') as HTMLInputElement;
 
     // Soundboard buttons
     const testSpawnSynthButton = document.getElementById('test-spawn-synth');
@@ -179,7 +180,7 @@ async function main() {
     const testGameOverSynthButton = document.getElementById('test-gameover-synth');
 
 
-    if (!playButton || !settingsButton || !soundboardButton || !backButtonSettings || !backButtonSoundboard || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !blockStyleSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox || !testSpawnSynthButton || !testLockSynthButton || !testClearSynthButton || !testMovementSynthButton || !testGameOverSynthButton) {
+    if (!playButton || !settingsButton || !soundboardButton || !backButtonSettings || !backButtonSoundboard || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !blockStyleSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox || !animatedLineClearCheckbox || !testSpawnSynthButton || !testLockSynthButton || !testClearSynthButton || !testMovementSynthButton || !testGameOverSynthButton) {
         throw new Error('One or more UI elements not found');
     }
 
@@ -270,6 +271,10 @@ async function main() {
 
     ghostPieceCheckbox.addEventListener('change', () => {
         uiManager.updateVisualSettings({ isGhostPieceEnabled: ghostPieceCheckbox.checked });
+    });
+
+    animatedLineClearCheckbox.addEventListener('change', () => {
+        uiManager.updateVisualSettings({ isLineClearAnimationEnabled: animatedLineClearCheckbox.checked });
     });
 
     window.addEventListener('resize', handleResize);
