@@ -51,12 +51,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          headers: |
-            Cross-Origin-Opener-Policy: same-origin
-            Cross-Origin-Embedder-Policy: require-corp
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
