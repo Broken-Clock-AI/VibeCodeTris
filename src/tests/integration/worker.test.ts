@@ -2,11 +2,23 @@
 import { Worker } from 'worker_threads';
 import { resolve } from 'path';
 import { Snapshot } from '../../logic/types';
+import { glob } from 'glob';
 
 jest.setTimeout(30000); // 30s global timeout for this file
 
-// Point directly to the compiled worker file.
-const WORKER_PATH = resolve(__dirname, '../../../dist/logic/worker.js');
+let WORKER_PATH = '';
+
+beforeAll(async () => {
+    // Find the built worker file from the main build process.
+    // This requires `npm run build` to be run before `npm test`.
+    const files = await glob('dist/assets/worker-*.js');
+    if (files.length === 0) {
+        throw new Error('Worker file not found in dist/assets. Please run "npm run build" before running tests.');
+    }
+    // We resolve to get an absolute path, which is more reliable for the Worker constructor.
+    WORKER_PATH = resolve(files[0]);
+});
+
 
 describe('Worker Integration Tests', () => {
     let worker: Worker;
@@ -17,11 +29,7 @@ describe('Worker Integration Tests', () => {
         messages = [];
         lastSnapshot = null;
         
-        // Load the compiled JS worker as an ES Module.
-        worker = new Worker(WORKER_PATH, {
-            workerData: {}, // Pass any initial data if needed
-            type: 'module',
-        } as any);
+        worker = new Worker(WORKER_PATH);
 
         let isReady = false;
         worker.on('message', (msg) => {

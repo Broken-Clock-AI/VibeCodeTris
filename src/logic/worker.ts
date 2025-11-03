@@ -70,7 +70,7 @@ function run(port: any) {
         if (!engine) return;
         try {
             const snapshot = engine.tick();
-            post('snapshot', snapshot, [snapshot.boardBuffer]);
+            post('snapshot', snapshot);
         } catch (error) {
             console.error("--- FATAL: Engine crashed ---", error);
             stopEngine();

@@ -33,10 +33,17 @@ describe('TetrisEngine: Line Clearing and Scoring', () => {
     // @ts-ignore - Accessing private currentPiece for test setup
     engine.currentPiece = piece;
 
-    // Lock the piece, which should trigger line clearing and scoring
     // @ts-ignore - Accessing private lockPiece method for test
     engine.lockPiece();
 
+    // We need to tick the engine forward enough times to get past the line clear delay
+    // @ts-ignore - Accessing private lineClearDelay for test
+    const delay = engine.lineClearDelay;
+    for (let i = 0; i < delay; i++) {
+      engine.tick();
+    }
+
+    // The final tick will execute finalizeLineClear and create the snapshot we need
     const snapshot = engine.tick();
 
     // --- Assertions ---

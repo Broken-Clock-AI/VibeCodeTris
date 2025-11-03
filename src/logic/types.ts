@@ -23,46 +23,84 @@ export type GameInput = {
  * A complete, self-contained snapshot of the entire game state at a
  * specific moment in time. Designed for replay, recovery, and rendering.
  */
-export type Snapshot = {
-  // --- Metadata ---
-  protocolVersion: number;
-  engineVersion: string;
-  snapshotSchemaVersion: number;
-  snapshotId: number;
-  tick: number;
-  authoritativeTimeMs: number;
+export interface GameState {
+    boardBuffer: SharedArrayBuffer;
+    rows: number;
+    cols: number;
+    current: Piece | null;
+    score: number;
+    level: number;
+    lines: number;
+    gameOver: boolean;
+    events: GameEvent[];
+    nextPieces: PieceType[];
+    heldPiece: PieceType | null;
+    canHold: boolean;
+    status: GameStatus;
+    clearedLines?: number[];
+}
 
-  // --- Deterministic State ---
-  prngState: Uint32Array;
-  bagState: { bag: Uint8Array; index: number };
-  inputQueueCursor: number;
+export type PieceType = 'I' | 'J' | 'L' | 'O' | 'S' | 'T' | 'Z';
 
-  // --- Game State ---
-  lockCounter: number;
-  gravityCounter: number;
-  backToBack: number;
-  combo: number;
-  rows: number;
-  cols: number;
-  boardBuffer: ArrayBuffer;
-  current: {
-    type: string;
+export interface Piece {
+    type: PieceType;
+    // The matrix is flattened for the snapshot
     matrix: Uint8Array;
     x: number;
     y: number;
-    ghostY?: number;
     rotation: number;
     colorIndex: number;
-  } | null;
-  nextTypes: Uint8Array;
-  holdType: number;
-  score: number;
-  level: number;
-  lines: number;
-  gameOver: boolean;
+    ghostY: number;
+}
 
-  // --- Ephemeral State ---
-  events: GameEvent[];
-  checksum: number;
-};
+export interface Snapshot {
+    // Metadata
+    protocolVersion: number;
+    engineVersion: string;
+    snapshotSchemaVersion: number;
+    snapshotId: number;
+    tick: number;
+    authoritativeTimeMs: number;
+    checksum: number;
+
+    // Core State
+    prngState: Uint32Array;
+    bagState: { bag: Uint8Array; index: number };
+    boardBuffer: SharedArrayBuffer;
+    rows: number;
+    cols: number;
+    current: Piece | null;
+    
+    // Gameplay State
+    score: number;
+    level: number;
+    lines: number;
+    gameOver: boolean;
+    status: GameStatus;
+    clearedLines?: number[];
+    lineClearDelay?: number;
+    
+    // Timing and Input
+    lockCounter: number;
+    gravityCounter: number;
+    inputQueueCursor: number;
+    
+    // Piece State
+    nextTypes: Uint8Array;
+    holdType: number;
+    
+    // Scoring State
+    backToBack: number;
+    combo: number;
+
+    // Ephemeral Data
+    events: GameEvent[];
+}
+
+export enum GameStatus {
+    Playing,
+    LineClearAnimation,
+    GameOver,
+}
+
 

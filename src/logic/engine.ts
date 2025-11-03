@@ -1,7 +1,7 @@
 import { COLS, DAS, GRAVITY_START_DELAY, LOCK_DELAY, ROWS, CURRENT_ENGINE_VERSION, PROTOCOL_VERSION, SNAPSHOT_SCHEMA_VERSION, ARR } from './constants';
 import { PRNG } from './rng';
 import { calculateScore, isValidPosition, rotateMatrix } from './rules';
-import { GameEvent, Snapshot } from './types';
+import { GameEvent, Snapshot, GameStatus, PieceType } from './types';
 import { calculateChecksum } from './recover';
 
 // --- Piece Definitions ---
@@ -16,12 +16,14 @@ const PIECE_SHAPES = {
   Z: [[1, 1, 0], [0, 1, 1], [0, 0, 0]],
 };
 
+const LINE_CLEAR_DELAY_TICKS = 28; // Approx 450ms at 60fps
 
 export class TetrisEngine {
   // --- Core State ---
   private prng: PRNG;
   private board: Uint8Array;
   private tickCounter: number;
+  private status: GameStatus;
 
   // --- Piece and Bag State ---
   private bag: string[];
@@ -36,6 +38,7 @@ export class TetrisEngine {
   private arr: number;
   private dasCounter: { left: number; right: number; down: number };
   private isMoving: { left: boolean; right: boolean; down: boolean };
+  private lineClearDelay: number;
   
   // --- Gameplay State ---
   private score: number;
@@ -43,15 +46,18 @@ export class TetrisEngine {
   private lines: number;
   private backToBack: number;
   private combo: number;
-  private gameOver: boolean;
+  private clearedLines: number[];
   
   // --- Ephemeral State ---
   private events: GameEvent[];
+  private isLineClearAnimationEnabled: boolean;
 
-  constructor(seed: number) {
+  constructor(seed: number, isLineClearAnimationEnabled: boolean = true) {
     this.prng = new PRNG(seed);
     this.board = new Uint8Array(ROWS * COLS).fill(0);
     this.tickCounter = 0;
+    this.status = GameStatus.Playing;
+    this.isLineClearAnimationEnabled = isLineClearAnimationEnabled;
     
     this.bag = [];
     this.nextTypes = new Uint8Array(6); // Show 6 next pieces
@@ -67,13 +73,14 @@ export class TetrisEngine {
     this.arr = ARR;
     this.dasCounter = { left: 0, right: 0, down: 0 };
     this.isMoving = { left: false, right: false, down: false };
+    this.lineClearDelay = 0;
 
     this.score = 0;
     this.level = 1;
     this.lines = 0;
     this.backToBack = 0;
     this.combo = 0;
-    this.gameOver = false;
+    this.clearedLines = [];
 
     this.events = [];
   }
@@ -117,6 +124,8 @@ export class TetrisEngine {
     engine.lines = snapshot.lines;
     engine.backToBack = snapshot.backToBack;
     engine.combo = snapshot.combo;
+    engine.status = snapshot.status;
+    engine.clearedLines = snapshot.clearedLines || [];
     
     engine.events = []; // Events are ephemeral and not restored
 
@@ -137,10 +146,18 @@ export class TetrisEngine {
    * The main deterministic game loop.
    */
   public tick(): Snapshot {
-    if (this.gameOver) {
+    if (this.status === GameStatus.GameOver) {
         return this.createSnapshot();
     }
     this.tickCounter++;
+
+    if (this.status === GameStatus.LineClearAnimation) {
+        this.lineClearDelay--;
+        if (this.lineClearDelay <= 0) {
+            this.finalizeLineClear();
+        }
+        return this.createSnapshot();
+    }
 
     if (!this.currentPiece) {
         this.spawnPiece();
@@ -168,8 +185,6 @@ export class TetrisEngine {
         }
     }
     
-    // ... game logic will go here ...
-
     return this.createSnapshot();
   }
 
@@ -178,7 +193,7 @@ export class TetrisEngine {
    * @param action The input action to process (e.g., 'moveLeft', 'rotateCW').
    */
   public handleInput(action: string): void {
-    if (!this.currentPiece || this.gameOver) return;
+    if (!this.currentPiece || this.status !== GameStatus.Playing) return;
 
     let { x, y, matrix } = this.currentPiece;
     const originalX = x;
@@ -210,7 +225,6 @@ export class TetrisEngine {
             this.isMoving.down = false;
             break;
         case 'hardDrop':
-            // This will be handled by finding the final position and locking instantly
             let distance = 0;
             while (isValidPosition(matrix, x, y + 1, this.board)) {
                 y++;
@@ -219,14 +233,13 @@ export class TetrisEngine {
             this.events.push({ type: 'hardDrop', tick: this.tickCounter, data: { type: this.currentPiece.type, distance } });
             this.currentPiece.y = y;
             this.lockPiece();
-            return; // Exit early as lockPiece is called
+            return;
         case 'rotateCW':
             matrix = rotateMatrix(matrix, 1);
             if (isValidPosition(matrix, x, y, this.board)) {
                 this.currentPiece.matrix = matrix;
                 this.events.push({ type: 'pieceMoveRight', tick: this.tickCounter, data: { type: this.currentPiece.type, x: this.currentPiece.x, y: this.currentPiece.y } });
             }
-            // TODO: Add wall kick logic here
             break;
         case 'rotateCCW':
             matrix = rotateMatrix(matrix, -1);
@@ -234,10 +247,8 @@ export class TetrisEngine {
                 this.currentPiece.matrix = matrix;
                 this.events.push({ type: 'pieceMoveLeft', tick: this.tickCounter, data: { type: this.currentPiece.type, x: this.currentPiece.x, y: this.currentPiece.y } });
             }
-            // TODO: Add wall kick logic here
             break;
         case 'hold':
-            // TODO: Implement hold logic
             break;
     }
 
@@ -256,13 +267,9 @@ export class TetrisEngine {
     }
   }
 
-  /**
-   * Handles the continuous movement logic for DAS and ARR.
-   */
   private updateMovement(): void {
     if (!this.currentPiece) return;
 
-    // --- Left Movement ---
     if (this.isMoving.left) {
         this.dasCounter.left++;
         if (this.dasCounter.left > this.das) {
@@ -275,7 +282,6 @@ export class TetrisEngine {
         }
     }
 
-    // --- Right Movement ---
     if (this.isMoving.right) {
         this.dasCounter.right++;
         if (this.dasCounter.right > this.das) {
@@ -288,7 +294,6 @@ export class TetrisEngine {
         }
     }
 
-    // --- Soft Drop Movement ---
     if (this.isMoving.down) {
         this.dasCounter.down++;
         if (this.dasCounter.down > this.das) {
@@ -302,24 +307,19 @@ export class TetrisEngine {
     }
   }
 
-  /**
-   * Locks the current piece to the board and spawns a new one.
-   */
   private lockPiece(): void {
     if (!this.currentPiece) return;
 
-    // Add piece to board
     for (let r = 0; r < this.currentPiece.matrix.length; r++) {
         for (let c = 0; c < this.currentPiece.matrix[r].length; c++) {
             if (this.currentPiece.matrix[r][c]) {
                 const boardX = this.currentPiece.x + c;
                 const boardY = this.currentPiece.y + r;
-                // Game Over Check: Piece locked above the visible board
                 if (boardY < 0) {
-                    this.gameOver = true;
+                    this.status = GameStatus.GameOver;
                     this.events.push({ type: 'gameOver', tick: this.tickCounter });
                     this.currentPiece = null;
-                    return; // End the lock process immediately
+                    return;
                 }
                 this.board[boardY * COLS + boardX] = PIECE_TYPES.indexOf(this.currentPiece.type) + 1;
             }
@@ -328,64 +328,78 @@ export class TetrisEngine {
 
     this.events.push({ type: 'pieceLock', tick: this.tickCounter, data: { type: this.currentPiece.type } });
 
-    // --- Line Clearing & Scoring ---
-    let linesCleared = 0;
-    const clearedRows: number[] = [];
-    for (let r = ROWS - 1; r >= 0; r--) {
-        const isLineFull = ![...this.board.slice(r * COLS, (r + 1) * COLS)].includes(0);
-        if (isLineFull) {
-            linesCleared++;
-            clearedRows.push(r);
-            // Shift all rows above down
-            for (let y = r; y > 0; y--) {
-                for (let x = 0; x < COLS; x++) {
-                    this.board[y * COLS + x] = this.board[(y - 1) * COLS + x];
-                }
-            }
-            // Clear the top row
-            for (let x = 0; x < COLS; x++) {
-                this.board[x] = 0;
-            }
-            // Since we shifted down, we need to check the same row again
-            r++; 
-        }
-    }
-
-    if (linesCleared > 0) {
-        this.combo++;
-        // TODO: T-Spin detection
-        const isTSpin = false; 
-        const isBackToBack = this.backToBack > 0 && (linesCleared === 4 || isTSpin);
+    const clearedRows = this.findClearedLines();
+    if (clearedRows.length > 0) {
+        this.clearedLines = clearedRows;
+        this.status = GameStatus.LineClearAnimation;
+        this.lineClearDelay = LINE_CLEAR_DELAY_TICKS;
         
-        const scoreGained = calculateScore(linesCleared, this.level, isTSpin, isBackToBack);
-        this.score += scoreGained;
-        this.lines += linesCleared;
-        this.level = Math.floor(this.lines / 10) + 1;
+        // The actual line removal is now handled after the delay in the tick() function.
+        // We just set the state here and the renderer will animate it.
+        this.currentPiece = null; // Clear current piece to prevent it from being drawn during animation
 
-        this.events.push({ type: 'lineClear', tick: this.tickCounter, data: { rows: clearedRows, count: linesCleared } });
-        this.events.push({ type: 'scoreUpdate', tick: this.tickCounter, data: { score: this.score, lines: this.lines, level: this.level } });
-
-        if (linesCleared === 4 || isTSpin) {
-            this.backToBack++;
-        } else {
-            this.backToBack = 0;
-        }
     } else {
         this.combo = 0;
+        this.currentPiece = null;
+        this.lockCounter = 0;
+        this.spawnPiece();
+    }
+  }
+
+  private findClearedLines(): number[] {
+    const clearedRows: number[] = [];
+    for (let r = 0; r < ROWS; r++) {
+        const isLineFull = ![...this.board.slice(r * COLS, (r + 1) * COLS)].includes(0);
+        if (isLineFull) {
+            clearedRows.push(r);
+        }
+    }
+    return clearedRows;
+  }
+
+  private finalizeLineClear(): void {
+    const linesCleared = this.clearedLines.length;
+    if (linesCleared === 0) return;
+
+    const isTSpin = false;
+    const isBackToBack = this.backToBack > 0 && (linesCleared === 4 || isTSpin);
+    
+    const scoreGained = calculateScore(linesCleared, this.level, isTSpin, isBackToBack);
+    this.score += scoreGained;
+    this.lines += linesCleared;
+    this.level = Math.floor(this.lines / 10) + 1;
+    this.combo++;
+
+    this.events.push({ type: 'lineClear', tick: this.tickCounter, data: { rows: this.clearedLines, count: linesCleared } });
+    this.events.push({ type: 'scoreUpdate', tick: this.tickCounter, data: { score: this.score, lines: this.lines, level: this.level } });
+
+    if (linesCleared === 4 || isTSpin) {
+        this.backToBack++;
+    } else {
+        this.backToBack = 0;
     }
 
-    // Reset for next piece
+    const newBoard = new Uint8Array(ROWS * COLS).fill(0);
+    let newRow = ROWS - 1;
+    for (let r = ROWS - 1; r >= 0; r--) {
+        if (!this.clearedLines.includes(r)) {
+            for (let c = 0; c < COLS; c++) {
+                newBoard[newRow * COLS + c] = this.board[r * COLS + c];
+            }
+            newRow--;
+        }
+    }
+    this.board = newBoard;
+
+    this.clearedLines = [];
+    this.status = GameStatus.Playing;
     this.currentPiece = null;
     this.lockCounter = 0;
     this.spawnPiece();
   }
 
-  /**
-   * Fills the piece bag with a new shuffled set of 7 pieces.
-   */
   private fillBag(): void {
     const pieces = [...PIECE_TYPES];
-    // Fisher-Yates shuffle
     for (let i = pieces.length - 1; i > 0; i--) {
       const j = Math.floor(this.prng.nextFloat() * (i + 1));
       [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
@@ -394,18 +408,12 @@ export class TetrisEngine {
     this.updateNextTypes();
   }
 
-  /**
-   * Updates the public-facing `nextTypes` array.
-   */
   private updateNextTypes(): void {
     for (let i = 0; i < this.nextTypes.length; i++) {
         this.nextTypes[i] = PIECE_TYPES.indexOf(this.bag[i]) + 1;
     }
   }
 
-  /**
-   * Spawns a new piece from the bag.
-   */
   private spawnPiece(): void {
     if (this.bag.length <= 7) {
         this.fillBag();
@@ -428,19 +436,15 @@ export class TetrisEngine {
     this.events.push({ type: 'pieceSpawn', tick: this.tickCounter, data: { type } });
 
     if (!isValidPosition(this.currentPiece.matrix, this.currentPiece.x, this.currentPiece.y, this.board)) {
-        this.gameOver = true;
+        this.status = GameStatus.GameOver;
         this.events.push({ type: 'gameOver', tick: this.tickCounter });
         this.currentPiece = null;
     }
   }
 
-  /**
-   * Calculates the final Y position of the current piece if it were dropped.
-   * @returns The Y coordinate of the ghost piece's position.
-   */
   private calculateGhostPosition(): number {
     if (!this.currentPiece) {
-        return -1; // Should not happen if called correctly
+        return -1;
     }
     let ghostY = this.currentPiece.y;
     while (isValidPosition(this.currentPiece.matrix, this.currentPiece.x, ghostY + 1, this.board)) {
@@ -449,22 +453,17 @@ export class TetrisEngine {
     return ghostY;
   }
 
-  /**
-   * Creates a snapshot of the current game state.
-   */
   private createSnapshot(): Snapshot {
     const bagUint8 = new Uint8Array(this.bag.length);
     for (let i = 0; i < this.bag.length; i++) {
         bagUint8[i] = PIECE_TYPES.indexOf(this.bag[i]) + 1;
     }
 
-    // Create a single copy of the board buffer to be used for both
-    // the checksum and the transferable payload. The engine's internal
-    // buffer must NOT be transferred.
-    const boardBufferCopy = this.board.buffer.slice(0) as ArrayBuffer;
-    
     const eventsForSnapshot = [...this.events];
-    this.events = []; // Clear for the next tick
+    this.events = [];
+
+    const sharedBoardBuffer = new SharedArrayBuffer(this.board.buffer.byteLength);
+    new Uint8Array(sharedBoardBuffer).set(new Uint8Array(this.board.buffer));
 
     const snapshotData: Omit<Snapshot, 'checksum'> = {
         protocolVersion: PROTOCOL_VERSION,
@@ -472,12 +471,12 @@ export class TetrisEngine {
         snapshotSchemaVersion: SNAPSHOT_SCHEMA_VERSION,
         snapshotId: this.tickCounter,
         tick: this.tickCounter,
-        authoritativeTimeMs: this.tickCounter * (1000 / 60), // Assuming 60 TPS for now
+        authoritativeTimeMs: this.tickCounter * (1000 / 60),
         
         prngState: new Uint32Array([this.prng.getState()]),
-        bagState: { bag: bagUint8, index: 0 }, // Index is 0 as we shift from the bag
+        bagState: { bag: bagUint8, index: 0 },
 
-        inputQueueCursor: 0, // Placeholder
+        inputQueueCursor: 0,
         lockCounter: this.lockCounter,
         gravityCounter: this.gravityCounter,
 
@@ -486,10 +485,11 @@ export class TetrisEngine {
 
         rows: ROWS,
         cols: COLS,
-        boardBuffer: boardBufferCopy,
+        boardBuffer: sharedBoardBuffer,
         
         current: this.currentPiece ? {
             ...this.currentPiece,
+            type: this.currentPiece.type as PieceType,
             matrix: new Uint8Array(this.currentPiece.matrix.flat()),
             ghostY: this.calculateGhostPosition(),
         } : null,
@@ -500,7 +500,10 @@ export class TetrisEngine {
         score: this.score,
         level: this.level,
         lines: this.lines,
-        gameOver: this.gameOver,
+        gameOver: this.status === GameStatus.GameOver,
+        status: this.status,
+        clearedLines: this.clearedLines,
+        lineClearDelay: this.lineClearDelay,
 
         events: eventsForSnapshot,
     };

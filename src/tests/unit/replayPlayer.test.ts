@@ -4,7 +4,7 @@
 
 import { ReplayPlayer } from '../../replay/replayPlayer';
 import { ReplayData } from '../../replay/types';
-import { GameInput, Snapshot } from '../../logic/types';
+import { GameInput, Snapshot, GameStatus } from '../../logic/types';
 import { TetrisEngine } from '../../logic/engine';
 
 // Mock the TetrisEngine to isolate the ReplayPlayer logic
@@ -30,13 +30,14 @@ const mockSnapshot: Snapshot = {
   combo: 0,
   rows: 20,
   cols: 10,
-  boardBuffer: new ArrayBuffer(0),
+  boardBuffer: new SharedArrayBuffer(0),
   current: null,
   nextTypes: new Uint8Array(),
   holdType: 0,
   score: 0,
   level: 1,
   lines: 0,
+  status: GameStatus.Playing,
   events: [],
   checksum: 0,
 };
