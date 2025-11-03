@@ -1,7 +1,5 @@
 // vite.config.ts
 import { defineConfig } from 'vite';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 
 export default defineConfig({
   base: '/VibeCodeTris/',
@@ -11,21 +9,6 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    rollupOptions: {
-      plugins: [
-        {
-          name: 'copy-headers',
-          writeBundle() {
-            const headersContent = readFileSync(resolve(__dirname, './_headers'), 'utf-8');
-            this.emitFile({
-              type: 'asset',
-              fileName: '_headers',
-              source: headersContent,
-            });
-          },
-        },
-      ],
-    },
   },
   worker: {
     format: 'es',

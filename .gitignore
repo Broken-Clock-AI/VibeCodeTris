@@ -95,7 +95,8 @@ dist
 .cache/
 # Add any Gatsby specific files which shouldn't be tracked e.g.
 # https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby/src/utils/eslint-rules/limited-exports-page-templates.js
-public
+public/
+!public/_headers
 
 # vuepress build output
 .vuepress/dist
