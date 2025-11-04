@@ -44,10 +44,10 @@ function run(port: any) {
         engine = null;
     };
 
-    const startEngine = async (seed: number) => {
+    const startEngine = async (seed: number, isLineClearAnimationEnabled: boolean) => {
         stopEngine();
         const EngineConstructor = await getEngineConstructor();
-        engine = new EngineConstructor(seed);
+        engine = new EngineConstructor(seed, isLineClearAnimationEnabled);
         loop = setInterval(processTick, TICK_MS);
         post('log', { level: 'info', msg: 'Engine started.' });
     };
@@ -89,7 +89,7 @@ function run(port: any) {
         }
 
         switch (type) {
-            case 'start': startEngine(payload.seed); break;
+            case 'start': startEngine(payload.seed, payload.isLineClearAnimationEnabled); break;
             case 'input': engine?.handleInput(payload); break;
             case 'recover': recoverFromSnapshot(payload); break;
         }

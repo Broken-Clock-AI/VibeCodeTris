@@ -1,0 +1,32 @@
+project:
+  name: VibeCodeTris
+  purpose: To build a deterministic, worker-driven Tetris engine in TypeScript with a focus on replayability, resilience, and a highly customizable, accessible user experience.
+  stack:
+    - TypeScript
+    - Vite
+    - PixiJS
+    - Tone.js
+    - Jest/Vitest
+  architecture: Worker-authoritative, snapshot-based communication, deterministic (seeded PRNG), resilient crash/recovery flow.
+  systems:
+    - engine: Core game logic runs in a separate Web Worker, ensuring the main UI thread remains responsive. It is the single source of truth for all game state.
+    - rendering: Uses PixiJS for hardware-accelerated 2D rendering, driven by snapshots from the logic worker. Supports custom block styles and accessibility features.
+    - audio: A fully procedural audio system using Tone.js, driven by game events from the snapshot. Features a "Piece Melody" system for interactive, stateful sound.
+    - ai_workflow: A Git-based agentic workflow emphasizing atomic commits, user review, and a spec-first approach, often using AI to generate and refine development plans.
+  tests:
+    coverage_summary: Unit tests for core logic (engine, rules, RNG) and integration tests for the worker lifecycle, crash/recovery, and deterministic replays ("golden file" tests).
+    key_cases: SRS rotation, 7-bag determinism, scoring, piece locking, and worker crash/recovery.
+  design:
+    style_guide: "Modern Neon Pixel Art" - merges retro pixel discipline with modern glow minimalism.
+    color_theory: Dynamic color palettes with support for colorblind-friendly themes (Deuteranopia, Protanopia, Tritanopia).
+    animation_logic: Planned integration of GSAP for UI transitions and in-game animations (e.g., line clears, piece spawning).
+  lessons:
+    technical: The worker-authoritative, deterministic engine is a robust and effective pattern. `SharedArrayBuffer` requires specific server headers, making hosts like GitHub Pages unsuitable.
+    process: A spec-first, AI-assisted workflow is highly effective for planning and initial implementation, but requires human oversight for areas like legal/IP analysis.
+  future_use:
+    recommendations: The deterministic engine and snapshot-based architecture are highly reusable. The procedural audio system and "Tone Jammer" concept provide a strong foundation for future interactive design tools.
+    transferable_methods: The Git-based agentic workflow and the spec-first development process are valuable transferable methods for future VibeCoding projects.
+  project_status:
+    license: MIT License
+    development_status: Active development. Core gameplay, rendering, and accessibility features are complete. Current focus is on advanced tooling and procedural audio enhancements.
+    notes: The project was successfully migrated from GitHub Pages to Netlify to resolve `SharedArrayBuffer` issues. Development was frozen at one point due to IP concerns but has since resumed.

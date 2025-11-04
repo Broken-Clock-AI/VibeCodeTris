@@ -76,7 +76,7 @@ class RenderAPI extends EventEmitter<{
      * Starts the game engine worker.
      * @param seed The seed for the random number generator.
      */
-    public start(seed: number) {
+    public start(seed: number, visualSettings: any) {
         if (this.worker) {
             console.warn("RenderAPI: Worker already started. Ignoring call.");
             return;
@@ -91,7 +91,7 @@ class RenderAPI extends EventEmitter<{
             this.emit('fatal', { error: err.message });
         };
 
-        this.post('start', { seed });
+        this.post('start', { seed, isLineClearAnimationEnabled: visualSettings.isLineClearAnimationEnabled });
     }
 
     /**

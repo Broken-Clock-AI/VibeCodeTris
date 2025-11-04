@@ -329,23 +329,27 @@ export class TetrisEngine {
 
     this.events.push({ type: 'pieceLock', tick: this.tickCounter, data: { type: this.currentPiece.type } });
 
-    const clearedRows = this.findClearedLines();
-    if (clearedRows.length > 0) {
-        this.clearedLines = clearedRows;
-        this.status = GameStatus.LineClearAnimation;
-        this.lineClearDelay = LINE_CLEAR_DELAY_TICKS;
-        
-        // The actual line removal is now handled after the delay in the tick() function.
-        // We just set the state here and the renderer will animate it.
-        this.currentPiece = null; // Clear current piece to prevent it from being drawn during animation
-
-    } else {
-        this.combo = 0;
-        this.currentPiece = null;
-        this.lockCounter = 0;
-        this.spawnPiece();
-    }
-  }
+            const clearedRows = this.findClearedLines();
+        if (clearedRows.length > 0) {
+            this.clearedLines = clearedRows;
+            if (this.isLineClearAnimationEnabled) {
+                this.status = GameStatus.LineClearAnimation;
+                this.lineClearDelay = LINE_CLEAR_DELAY_TICKS;
+            } else {
+                // If animation is disabled, finalize line clear immediately
+                this.finalizeLineClear();
+            }
+            
+            // The actual line removal is now handled after the delay in the tick() function.
+            // We just set the state here and the renderer will animate it.
+            this.currentPiece = null; // Clear current piece to prevent it from being drawn during animation
+    
+        } else {
+            this.combo = 0;
+            this.currentPiece = null;
+            this.lockCounter = 0;
+            this.spawnPiece();
+        }  }
 
   private findClearedLines(): number[] {
     const clearedRows: number[] = [];
