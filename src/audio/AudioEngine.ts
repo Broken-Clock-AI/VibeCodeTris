@@ -134,7 +134,7 @@ class RulesEngine {
   handleEvent(ev: any, gameState: any) {
     const rule = this.config[ev.type];
     // A rule isn't required for the new piece melody events, so we check for that.
-    if (!rule && !['pieceMoveLeft', 'pieceMoveRight', 'softDropTick', 'hardDrop'].includes(ev.type)) {
+    if (!rule && !['pieceMoveLeft', 'pieceMoveRight', 'softDropTick', 'hardDrop', 'gravityStep'].includes(ev.type)) {
         return;
     }
 
@@ -165,6 +165,14 @@ class RulesEngine {
             }
             return;
         
+        case 'gravityStep':
+            if (this.activePieceRootIndex !== null) {
+                const midi = this.scale.quantize(this.activePieceRootIndex - Math.floor(this.rng.nextRange(0, 3))); 
+                const instrument = Instruments.get('pieceMovementSynth');
+                if (instrument) instrument.trigger(midi, 0.2, '32n', this.alignToSlot({ mode: 'onBeat', slot: '32n' }));
+            }
+            return;
+
         case 'softDropTick':
              if (this.activePieceRootIndex !== null) {
                 const midi = this.scale.quantize(this.activePieceRootIndex - Math.floor(this.rng.nextRange(0, 3))); 
@@ -413,6 +421,105 @@ export class AudioEngine {
               instrument.trigger(note, velocity, duration, now + i * 0.12);
           });
       }
+  }
+
+  public playMusicBoxTest() {
+    if (!this.initialized) {
+        console.warn("AudioEngine not initialized. Cannot play music box test.");
+        return;
+    }
+
+    // Create effects chain
+    const reverb = new Tone.Reverb({
+        decay: 3,
+        wet: 0.25,
+    }).toDestination();
+
+    const delay = new Tone.PingPongDelay({
+        delayTime: "8n",
+        feedback: 0.2,
+        wet: 0.15
+    }).connect(reverb);
+
+    // Create the synth based on the spec
+    const musicBoxSynth = new Tone.FMSynth({
+        harmonicity: 3.01,
+        modulationIndex: 14,
+        oscillator: { type: 'sine' },
+        envelope: {
+            attack: 0.01,
+            decay: 0.3,
+            sustain: 0,
+            release: 1,
+        },
+        modulation: { type: 'triangle' },
+        modulationEnvelope: {
+            attack: 0.01,
+            decay: 0.5,
+            sustain: 0,
+            release: 0.5,
+        },
+    }).connect(delay);
+
+    // Play a test arpeggio (C-E-G-A -> G-E-C)
+    const now = Tone.now();
+    const notes = ["C5", "E5", "G5", "A5", "G5", "E5", "C5"];
+    notes.forEach((note, i) => {
+        // Add slight random detune for humanization
+        musicBoxSynth.detune.value = (Math.random() - 0.5) * 10;
+        musicBoxSynth.triggerAttackRelease(note, "8n", now + i * 0.2);
+    });
+  }
+
+  public playDreamCelestaTest() {
+    if (!this.initialized) return;
+
+    const reverb = new Tone.Reverb({ decay: 5, wet: 0.4 }).toDestination();
+    const chorus = new Tone.Chorus({
+        frequency: 1.5,
+        delayTime: 3.5,
+        depth: 0.7,
+        feedback: 0.1,
+        wet: 0.5
+    }).connect(reverb);
+
+    const celestaSynth = new Tone.FMSynth({
+        harmonicity: 4,
+        modulationIndex: 10,
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 2 },
+        modulation: { type: 'sine' },
+        modulationEnvelope: { attack: 0.02, decay: 0.3, sustain: 0, release: 2 },
+    }).connect(chorus);
+
+    const now = Tone.now();
+    const notes = ["C5", "E5", "G5", "A5", "G5", "E5", "C5"];
+    notes.forEach((note, i) => {
+        celestaSynth.detune.value = (Math.random() - 0.5) * 8;
+        celestaSynth.triggerAttackRelease(note, "4n", now + i * 0.3);
+    });
+  }
+
+  public playToyPianoTest() {
+    if (!this.initialized) return;
+
+    const reverb = new Tone.Reverb({ decay: 0.5, wet: 0.2 }).toDestination();
+    
+    const toyPianoSynth = new Tone.Synth({
+        oscillator: { type: 'pulse', width: 0.3 },
+        envelope: {
+            attack: 0.01,
+            decay: 0.15,
+            sustain: 0.05,
+            release: 0.3,
+        },
+    }).connect(reverb);
+
+    const now = Tone.now();
+    const notes = ["C5", "E5", "G5", "A5", "G5", "E5", "C5"];
+    notes.forEach((note, i) => {
+        toyPianoSynth.triggerAttackRelease(note, "8n", now + i * 0.15);
+    });
   }
 
   public handleSnapshot(snapshot: Snapshot) {

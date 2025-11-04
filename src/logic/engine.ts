@@ -178,6 +178,7 @@ export class TetrisEngine {
             const newY = this.currentPiece.y + 1;
             if (isValidPosition(this.currentPiece.matrix, this.currentPiece.x, newY, this.board)) {
                 this.currentPiece.y = newY;
+                this.events.push({ type: 'gravityStep', tick: this.tickCounter, data: { type: this.currentPiece.type, x: this.currentPiece.x, y: this.currentPiece.y } });
             } else {
                 // Piece has landed, handle locking
                 this.lockPiece();

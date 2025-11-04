@@ -233,6 +233,18 @@ async function main() {
         await audioEngine.initializeAudioContext();
         audioEngine.playGameOverSound();
     });
+    document.getElementById('test-music-box-synth')?.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        audioEngine.playMusicBoxTest();
+    });
+    document.getElementById('test-dream-celesta-synth')?.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        audioEngine.playDreamCelestaTest();
+    });
+    document.getElementById('test-toy-piano-synth')?.addEventListener('click', async () => {
+        await audioEngine.initializeAudioContext();
+        audioEngine.playToyPianoTest();
+    });
 
     const updateTimings = () => {
         const das = parseInt(dasSlider.value, 10);
