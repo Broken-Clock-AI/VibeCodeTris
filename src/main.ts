@@ -322,7 +322,7 @@ async function main() {
         uiManager.updateVisualSettings({ blockStyle: (uiElements.blockStyleSelect as HTMLSelectElement).value as VisualSettings['blockStyle'] });
     });
 
-    (uiElements.highContrastCheckbox as HTMLInputElement).addEventListener('change', (). => {
+    (uiElements.highContrastCheckbox as HTMLInputElement).addEventListener('change', () => {
         uiManager.updateVisualSettings({ highContrast: (uiElements.highContrastCheckbox as HTMLInputElement).checked });
     });
 
