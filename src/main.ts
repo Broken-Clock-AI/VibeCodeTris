@@ -5,11 +5,22 @@ import { UIStateManager, UIState, VisualSettings } from './ui/state';
 import { AccessibilityManager } from './ui/accessibility';
 import { AudioEngine } from './audio/AudioEngine';
 import { AudioConfig } from './audio/types';
+import { AnimationManager } from './renderer/animations/AnimationManager';
+import { ToneJammerManager } from './ui/tone-jammer';
+
+function validateUIElements(elements: { [key: string]: HTMLElement | null }): void {
+    for (const key in elements) {
+        if (!elements[key]) {
+            throw new Error(`UI element not found: ${key}`);
+        }
+    }
+}
 
 async function main() {
     const uiManager = new UIStateManager();
     const inputManager = new InputManager();
     const accessibilityManager = new AccessibilityManager(document.body);
+    const animationManager = new AnimationManager(); // Initialize AnimationManager
 
     // Placeholder Audio Configuration (from VibeCodeTris_Procedural_Audio_Spec.md)
     const audioConfig: AudioConfig = {
@@ -81,6 +92,14 @@ async function main() {
         throw new Error('Core container elements not found');
     }
 
+    let isAudioInitialized = false;
+    const initializeAudio = async () => {
+        if (!isAudioInitialized) {
+            await audioEngine.initializeAudioContext();
+            isAudioInitialized = true;
+        }
+    };
+
     const handleResize = () => {
         // Fix mobile viewport height issue
         document.body.style.height = `${window.innerHeight}px`;
@@ -127,7 +146,7 @@ async function main() {
     };
 
     const startGame = async () => {
-        await audioEngine.initializeAudioContext();
+        await initializeAudio();
         if (renderer) {
             renderer.destroy();
             renderer = null;
@@ -152,42 +171,85 @@ async function main() {
     };
 
     // --- Get UI Elements ---
-    const playButton = document.getElementById('play-button');
-    const settingsButton = document.getElementById('settings-button');
-    const soundboardButton = document.getElementById('soundboard-button');
-    const backButtonSettings = document.getElementById('back-button-settings');
-    const backButtonSoundboard = document.getElementById('back-button-soundboard');
-    const playAgainButton = document.getElementById('play-again-button');
-    const mainMenuButton = document.getElementById('main-menu-button');
-    const dasSlider = document.getElementById('das-slider') as HTMLInputElement;
-    const arrSlider = document.getElementById('arr-slider') as HTMLInputElement;
-    const dasValue = document.getElementById('das-value');
-    const arrValue = document.getElementById('arr-value');
-    const colorPaletteSelect = document.getElementById('color-palette-select') as HTMLSelectElement;
-    const blockStyleSelect = document.getElementById('block-style-select') as HTMLSelectElement;
-    const highContrastCheckbox = document.getElementById('high-contrast-checkbox') as HTMLInputElement;
-    const distinctPatternsCheckbox = document.getElementById('distinct-patterns-checkbox') as HTMLInputElement;
-    const pieceOutlineCheckbox = document.getElementById('piece-outline-checkbox') as HTMLInputElement;
-    const solidPiecesCheckbox = document.getElementById('solid-pieces-checkbox') as HTMLInputElement;
-    const ghostPieceCheckbox = document.getElementById('ghost-piece-checkbox') as HTMLInputElement;
-    const animatedLineClearCheckbox = document.getElementById('animated-line-clear-checkbox') as HTMLInputElement;
+    const uiElements = {
+        playButton: document.getElementById('play-button'),
+        settingsButton: document.getElementById('settings-button'),
+        soundboardButton: document.getElementById('soundboard-button'),
+        toneJammerButton: document.getElementById('tone-jammer-button'),
+        backButtonSettings: document.getElementById('back-button-settings'),
+        backButtonSoundboard: document.getElementById('back-button-soundboard'),
+        backButtonToneJammer: document.getElementById('back-button-tone-jammer'),
+        playAgainButton: document.getElementById('play-again-button'),
+        mainMenuButton: document.getElementById('main-menu-button'),
+        dasSlider: document.getElementById('das-slider'),
+        arrSlider: document.getElementById('arr-slider'),
+        dasValue: document.getElementById('das-value'),
+        arrValue: document.getElementById('arr-value'),
+        colorPaletteSelect: document.getElementById('color-palette-select'),
+        blockStyleSelect: document.getElementById('block-style-select'),
+        highContrastCheckbox: document.getElementById('high-contrast-checkbox'),
+        distinctPatternsCheckbox: document.getElementById('distinct-patterns-checkbox'),
+        pieceOutlineCheckbox: document.getElementById('piece-outline-checkbox'),
+        solidPiecesCheckbox: document.getElementById('solid-pieces-checkbox'),
+        ghostPieceCheckbox: document.getElementById('ghost-piece-checkbox'),
+        animatedLineClearCheckbox: document.getElementById('animated-line-clear-checkbox'),
+        lineClearAnimationSelect: document.getElementById('line-clear-animation-select'),
+        testSpawnSynthButton: document.getElementById('test-spawn-synth'),
+        testLockSynthButton: document.getElementById('test-lock-synth'),
+        testClearSynthButton: document.getElementById('test-clear-synth'),
+        testMovementSynthButton: document.getElementById('test-movement-synth'),
+        testGameOverSynthButton: document.getElementById('test-gameover-synth'),
+    };
 
-    // Soundboard buttons
-    const testSpawnSynthButton = document.getElementById('test-spawn-synth');
-    const testLockSynthButton = document.getElementById('test-lock-synth');
-    const testClearSynthButton = document.getElementById('test-clear-synth');
-    const testMovementSynthButton = document.getElementById('test-movement-synth');
-    const testGameOverSynthButton = document.getElementById('test-gameover-synth');
+    // Tone Jammer UI Elements
+    const jammerElements = {
+        loadPreset: document.getElementById('jammer-load-preset'),
+        livePreview: document.getElementById('jammer-live-preview'),
+        previewPitch: document.getElementById('jammer-preview-pitch'),
+        play: document.getElementById('jammer-play'),
+        randomizeAll: document.getElementById('jammer-randomize-all'),
+        copy: document.getElementById('jammer-copy'),
+        update: document.getElementById('jammer-update'),
+        id: document.getElementById('jammer-id'),
+        gain: document.getElementById('jammer-gain'),
+        maxVoices: document.getElementById('jammer-max-voices'),
+        reverb: document.getElementById('jammer-reverb'),
+        waveform: document.getElementById('jammer-waveform'),
+        envAttack: document.getElementById('jammer-env-attack'),
+        envDecay: document.getElementById('jammer-env-decay'),
+        envSustain: document.getElementById('jammer-env-sustain'),
+        envRelease: document.getElementById('jammer-env-release'),
+    };
 
+    validateUIElements(uiElements);
+    validateUIElements(jammerElements);
 
-    if (!playButton || !settingsButton || !soundboardButton || !backButtonSettings || !backButtonSoundboard || !playAgainButton || !mainMenuButton || !dasSlider || !arrSlider || !dasValue || !arrValue || !colorPaletteSelect || !blockStyleSelect || !highContrastCheckbox || !distinctPatternsCheckbox || !pieceOutlineCheckbox || !solidPiecesCheckbox || !ghostPieceCheckbox || !animatedLineClearCheckbox || !testSpawnSynthButton || !testLockSynthButton || !testClearSynthButton || !testMovementSynthButton || !testGameOverSynthButton) {
-        throw new Error('One or more UI elements not found');
-    }
+    const toneJammerManager = new ToneJammerManager(audioConfig, audioEngine, jammerElements as any);
+
+    // Populate line clear animation dropdown
+    animationManager.getAnimationNames().forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        (uiElements.lineClearAnimationSelect as HTMLSelectElement).appendChild(option);
+    });
+
+    // Set initial settings values
+    const initialSettings = uiManager.getVisualSettings();
+    (uiElements.colorPaletteSelect as HTMLSelectElement).value = initialSettings.colorPalette;
+    (uiElements.blockStyleSelect as HTMLSelectElement).value = initialSettings.blockStyle;
+    (uiElements.highContrastCheckbox as HTMLInputElement).checked = initialSettings.highContrast;
+    (uiElements.distinctPatternsCheckbox as HTMLInputElement).checked = initialSettings.distinctPatterns;
+    (uiElements.pieceOutlineCheckbox as HTMLInputElement).checked = initialSettings.pieceOutline;
+    (uiElements.solidPiecesCheckbox as HTMLInputElement).checked = initialSettings.solidPieces;
+    (uiElements.ghostPieceCheckbox as HTMLInputElement).checked = initialSettings.isGhostPieceEnabled;
+    (uiElements.animatedLineClearCheckbox as HTMLInputElement).checked = initialSettings.isLineClearAnimationEnabled;
+    (uiElements.lineClearAnimationSelect as HTMLSelectElement).value = initialSettings.lineClearAnimation;
 
     // --- Event Listeners ---
-    playButton.addEventListener('click', startGame);
-    playAgainButton.addEventListener('click', startGame);
-    mainMenuButton.addEventListener('click', () => {
+    uiElements.playButton!.addEventListener('click', startGame);
+    uiElements.playAgainButton!.addEventListener('click', startGame);
+    uiElements.mainMenuButton!.addEventListener('click', () => {
         if (renderer) {
             renderer.destroy();
             renderer = null;
@@ -195,98 +257,97 @@ async function main() {
         uiManager.changeState(UIState.MainMenu);
         accessibilityManager.announce('Game over. Main menu.');
     });
-    settingsButton.addEventListener('click', () => {
+    uiElements.settingsButton!.addEventListener('click', async () => {
+        await initializeAudio();
         uiManager.changeState(UIState.Settings);
         accessibilityManager.announce('Settings menu.');
     });
-    soundboardButton.addEventListener('click', () => {
+    uiElements.soundboardButton!.addEventListener('click', async () => {
+        await initializeAudio();
         uiManager.changeState(UIState.Soundboard);
         accessibilityManager.announce('Soundboard menu.');
     });
-    backButtonSettings.addEventListener('click', () => {
+    uiElements.toneJammerButton!.addEventListener('click', async () => {
+        await initializeAudio();
+        uiManager.changeState(UIState.ToneJammer);
+        accessibilityManager.announce('Tone Jammer menu.');
+    });
+    uiElements.backButtonSettings!.addEventListener('click', () => {
         uiManager.changeState(UIState.MainMenu);
         accessibilityManager.announce('Main menu.');
     });
-    backButtonSoundboard.addEventListener('click', () => {
+    uiElements.backButtonSoundboard!.addEventListener('click', () => {
         uiManager.changeState(UIState.MainMenu);
         accessibilityManager.announce('Main menu.');
+    });
+    uiElements.backButtonToneJammer!.addEventListener('click', () => {
+        uiManager.changeState(UIState.MainMenu);
+        accessibilityManager.announce('Main menu.');
+    });
+
+    // Tone Jammer Listeners
+    (jammerElements.loadPreset as HTMLSelectElement).addEventListener('change', (e) => {
+        const presetId = (e.target as HTMLSelectElement).value;
+        if (presetId) {
+            toneJammerManager.loadPreset(presetId);
+        }
     });
 
     // Soundboard listeners
-    testSpawnSynthButton.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        audioEngine.playSpawnSound();
-    });
-    testLockSynthButton.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        audioEngine.playLockSound();
-    });
-    testClearSynthButton.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        audioEngine.playClearSound();
-    });
-    testMovementSynthButton.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        audioEngine.playMovementSound();
-    });
-    testGameOverSynthButton.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        audioEngine.playGameOverSound();
-    });
-    document.getElementById('test-music-box-synth')?.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        audioEngine.playMusicBoxTest();
-    });
-    document.getElementById('test-dream-celesta-synth')?.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        audioEngine.playDreamCelestaTest();
-    });
-    document.getElementById('test-toy-piano-synth')?.addEventListener('click', async () => {
-        await audioEngine.initializeAudioContext();
-        audioEngine.playToyPianoTest();
-    });
+    uiElements.testSpawnSynthButton!.addEventListener('click', () => audioEngine.playSpawnSound());
+    uiElements.testLockSynthButton!.addEventListener('click', () => audioEngine.playLockSound());
+    uiElements.testClearSynthButton!.addEventListener('click', () => audioEngine.playClearSound());
+    uiElements.testMovementSynthButton!.addEventListener('click', () => audioEngine.playMovementSound());
+    uiElements.testGameOverSynthButton!.addEventListener('click', () => audioEngine.playGameOverSound());
+    document.getElementById('test-music-box-synth')?.addEventListener('click', () => audioEngine.playMusicBoxTest());
+    document.getElementById('test-dream-celesta-synth')?.addEventListener('click', () => audioEngine.playDreamCelestaTest());
+    document.getElementById('test-toy-piano-synth')?.addEventListener('click', () => audioEngine.playToyPianoTest());
 
     const updateTimings = () => {
-        const das = parseInt(dasSlider.value, 10);
-        const arr = parseInt(arrSlider.value, 10);
-        dasValue.textContent = das.toString();
-        arrValue.textContent = arr.toString();
+        const das = parseInt((uiElements.dasSlider as HTMLInputElement).value, 10);
+        const arr = parseInt((uiElements.arrSlider as HTMLInputElement).value, 10);
+        uiElements.dasValue!.textContent = das.toString();
+        uiElements.arrValue!.textContent = arr.toString();
         inputManager.updateTimings(das, arr); 
     };
 
-    dasSlider.addEventListener('input', updateTimings);
-    arrSlider.addEventListener('input', updateTimings);
+    uiElements.dasSlider!.addEventListener('input', updateTimings);
+    uiElements.arrSlider!.addEventListener('input', updateTimings);
 
-    colorPaletteSelect.addEventListener('change', () => {
-        uiManager.updateVisualSettings({ colorPalette: colorPaletteSelect.value as VisualSettings['colorPalette'] });
+    (uiElements.colorPaletteSelect as HTMLSelectElement).addEventListener('change', () => {
+        uiManager.updateVisualSettings({ colorPalette: (uiElements.colorPaletteSelect as HTMLSelectElement).value as VisualSettings['colorPalette'] });
     });
 
-    blockStyleSelect.addEventListener('change', () => {
-        uiManager.updateVisualSettings({ blockStyle: blockStyleSelect.value as VisualSettings['blockStyle'] });
+    (uiElements.blockStyleSelect as HTMLSelectElement).addEventListener('change', () => {
+        uiManager.updateVisualSettings({ blockStyle: (uiElements.blockStyleSelect as HTMLSelectElement).value as VisualSettings['blockStyle'] });
     });
 
-    highContrastCheckbox.addEventListener('change', () => {
-        uiManager.updateVisualSettings({ highContrast: highContrastCheckbox.checked });
+    (uiElements.highContrastCheckbox as HTMLInputElement).addEventListener('change', (). => {
+        uiManager.updateVisualSettings({ highContrast: (uiElements.highContrastCheckbox as HTMLInputElement).checked });
     });
 
-    distinctPatternsCheckbox.addEventListener('change', () => {
-        uiManager.updateVisualSettings({ distinctPatterns: distinctPatternsCheckbox.checked });
+    (uiElements.distinctPatternsCheckbox as HTMLInputElement).addEventListener('change', () => {
+        uiManager.updateVisualSettings({ distinctPatterns: (uiElements.distinctPatternsCheckbox as HTMLInputElement).checked });
     });
 
-    pieceOutlineCheckbox.addEventListener('change', () => {
-        uiManager.updateVisualSettings({ pieceOutline: pieceOutlineCheckbox.checked });
+    (uiElements.pieceOutlineCheckbox as HTMLInputElement).addEventListener('change', () => {
+        uiManager.updateVisualSettings({ pieceOutline: (uiElements.pieceOutlineCheckbox as HTMLInputElement).checked });
     });
 
-    solidPiecesCheckbox.addEventListener('change', () => {
-        uiManager.updateVisualSettings({ solidPieces: solidPiecesCheckbox.checked });
+    (uiElements.solidPiecesCheckbox as HTMLInputElement).addEventListener('change', () => {
+        uiManager.updateVisualSettings({ solidPieces: (uiElements.solidPiecesCheckbox as HTMLInputElement).checked });
     });
 
-    ghostPieceCheckbox.addEventListener('change', () => {
-        uiManager.updateVisualSettings({ isGhostPieceEnabled: ghostPieceCheckbox.checked });
+    (uiElements.ghostPieceCheckbox as HTMLInputElement).addEventListener('change', () => {
+        uiManager.updateVisualSettings({ isGhostPieceEnabled: (uiElements.ghostPieceCheckbox as HTMLInputElement).checked });
     });
 
-    animatedLineClearCheckbox.addEventListener('change', () => {
-        uiManager.updateVisualSettings({ isLineClearAnimationEnabled: animatedLineClearCheckbox.checked });
+    (uiElements.animatedLineClearCheckbox as HTMLInputElement).addEventListener('change', () => {
+        uiManager.updateVisualSettings({ isLineClearAnimationEnabled: (uiElements.animatedLineClearCheckbox as HTMLInputElement).checked });
+    });
+
+    (uiElements.lineClearAnimationSelect as HTMLSelectElement).addEventListener('change', () => {
+        uiManager.updateVisualSettings({ lineClearAnimation: (uiElements.lineClearAnimationSelect as HTMLSelectElement).value });
     });
 
     window.addEventListener('resize', handleResize);
@@ -297,7 +358,5 @@ async function main() {
     console.log('Application initialized.');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    main().catch(console.error);
-});
+main().catch(console.error);
 
