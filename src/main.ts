@@ -5,7 +5,7 @@ import { UIStateManager, UIState, VisualSettings } from './ui/state';
 import { AccessibilityManager } from './ui/accessibility';
 import { AudioEngine } from './audio/AudioEngine';
 import { AudioConfig } from './audio/types';
-import { AnimationManager } from './renderer/animations/AnimationManager';
+import { AnimationManager } from './renderer/animations/AnimationManager.ts';
 import { ToneJammerManager } from './ui/tone-jammer';
 
 function validateUIElements(elements: { [key: string]: HTMLElement | null }): void {
