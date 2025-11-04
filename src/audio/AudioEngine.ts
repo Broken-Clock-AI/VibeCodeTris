@@ -46,28 +46,33 @@ class Scale {
 class Instrument {
   public id: string;
   private opts: InstrumentConfig;
-  private pool: (ToneSynth | TonePolySynth)[];
+  private pool: (ToneSynth | TonePolySynth)[] = [];
   private maxVoices: number;
-  private gainNode: ToneGain;
-  private reverb?: Tone.Reverb;
+  private gainNode: ToneGain | null = null;
+  private reverb: Tone.Reverb | null = null;
+  private initialized: boolean = false;
 
   constructor(id: string, opts: InstrumentConfig) {
     this.id = id;
     this.opts = opts;
     this.maxVoices = opts.maxVoices || 8;
-    this.gainNode = new Tone.Gain(opts.gain || 0.8).toDestination();
-    this.pool = [];
+  }
 
-    if (opts.effects?.sendReverb) {
+  public init() {
+    if (this.initialized) return;
+    this.gainNode = new Tone.Gain(this.opts.gain || 0.8).toDestination();
+    if (this.opts.effects?.sendReverb) {
         this.reverb = new Tone.Reverb({
             decay: 4,
             preDelay: 0.01,
-            wet: opts.effects.sendReverb
+            wet: this.opts.effects.sendReverb
         }).connect(this.gainNode);
     }
+    this.initialized = true;
   }
 
   trigger(noteMidi: number | number[], velocity: number = 0.8, dur: ToneUnit.Time = '8n', when?: ToneUnit.Time, params: any = {}) {
+    if (!this.initialized || !this.gainNode) return;
     const isChord = Array.isArray(noteMidi);
     const freqs = isChord ? noteMidi.map(m => this.midiToFreq(m)) : this.midiToFreq(noteMidi);
     const safeWhen = when ?? Tone.now();
@@ -338,12 +343,19 @@ export class AudioEngine {
   constructor(gameSeed: number, config: AudioConfig) {
     this.rng = new SeededRNG(gameSeed);
     this.config = config;
+    
+    // Pre-create instrument instances, but don't initialize Tone objects yet.
+    this.config.instruments.forEach((instConfig: InstrumentConfig) => {
+      const instrument = new Instrument(instConfig.id, instConfig);
+      Instruments.set(instConfig.id, instrument);
+    });
   }
 
   public async initializeAudioContext() {
     if (this.initialized) return;
     
     await Tone.start();
+    console.log('Audio context started');
     this.initialized = true;
 
     this.masterGain = new Tone.Gain(1).toDestination();
@@ -353,14 +365,21 @@ export class AudioEngine {
 
     const scale = new Scale(this.config.scales.default.root, this.config.scales.default.pattern);
 
-    this.config.instruments.forEach((instConfig: InstrumentConfig) => {
-      const instrument = new Instrument(instConfig.id, instConfig);
-      Instruments.set(instConfig.id, instrument);
-    });
+    // Now that the audio context is started, initialize the Tone objects inside each instrument.
+    Instruments.forEach(instrument => instrument.init());
 
     this.rulesEngine = new RulesEngine(this.config.rules, scale, this.rng);
     
     Tone.Transport.start("+0.1");
+  }
+
+  public playJammerSound(preset: any, pitch: number): void {
+    if (!this.initialized) return;
+    const freq = 440 * Math.pow(2, (pitch - 69) / 12);
+    const synth = new Tone.Synth(preset).toDestination();
+    synth.triggerAttackRelease(freq, '8n', Tone.now());
+    // Dispose of the synth after a short time to clean up resources
+    setTimeout(() => synth.dispose(), 500);
   }
 
   public playTestSound() {
