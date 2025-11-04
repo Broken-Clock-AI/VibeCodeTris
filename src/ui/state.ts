@@ -6,6 +6,7 @@ export enum UIState {
     Settings,
     GameOver,
     Soundboard,
+    ToneJammer,
 }
 
 export interface VisualSettings {
@@ -17,6 +18,7 @@ export interface VisualSettings {
     solidPieces: boolean;
     isGhostPieceEnabled: boolean;
     isLineClearAnimationEnabled: boolean;
+    lineClearAnimation: string;
 }
 
 export class UIStateManager {
@@ -30,6 +32,8 @@ export class UIStateManager {
         pieceOutline: false,
         solidPieces: false,
         isGhostPieceEnabled: true,
+        isLineClearAnimationEnabled: true,
+        lineClearAnimation: 'Center-Out Wipe', // Default animation
     };
     private subscribers: ((settings: VisualSettings) => void)[] = [];
 
@@ -43,8 +47,9 @@ export class UIStateManager {
         const settings = document.getElementById('settings-screen');
         const gameOver = document.getElementById('game-over-screen');
         const soundboard = document.getElementById('soundboard-screen');
+        const toneJammer = document.getElementById('tone-jammer-screen');
 
-        if (!mainMenu || !inGame || !settings || !gameOver || !soundboard) {
+        if (!mainMenu || !inGame || !settings || !gameOver || !soundboard || !toneJammer) {
             throw new Error('One or more UI view elements are missing from the DOM.');
         }
 
@@ -53,12 +58,14 @@ export class UIStateManager {
         this.viewElements.set(UIState.Settings, settings);
         this.viewElements.set(UIState.GameOver, gameOver);
         this.viewElements.set(UIState.Soundboard, soundboard);
+        this.viewElements.set(UIState.ToneJammer, toneJammer);
 
         // Set the initial state visibility
         this.updateVisibility();
     }
 
     public changeState(newState: UIState): void {
+        console.log(`Changing UI state to: ${UIState[newState]}`);
         if (this.currentState === newState) {
             return; // No change
         }

@@ -32,6 +32,7 @@ export class ToneJammerManager {
     private currentState: Partial<InstrumentConfig> = {};
 
     constructor(audioConfig: AudioConfig, audioEngine: AudioEngine, uiElements: JammerUIElements) {
+        console.log('ToneJammerManager: constructor called');
         this.audioConfig = audioConfig;
         this.audioEngine = audioEngine;
         this.ui = uiElements;
