@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
         html, body {
             height: 100vh;
             margin: 0;
@@ -28,11 +31,10 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            width: 100%;
+            width: 90%;
             height: 100%;
-            max-width: 400px; /* Max width for larger screens */
+            max-width: 40rem; /* Max width for larger screens */
             padding: 10px;
-            box-sizing: border-box;
         }
         /* Make view containers take full height */
         #app-container > div {
@@ -136,7 +138,6 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            max-width: 380px;
         }
         #settings-screen h2 {
             margin-bottom: 3vh;
@@ -232,6 +233,53 @@
             color: white;
         }
     </style>
+    <style>
+        /* --- Tone Jammer Styles --- */
+        #tone-jammer-screen {
+            justify-content: flex-start;
+            overflow-y: auto;
+            padding: 2vh 10px;
+        }
+        #tone-jammer-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 2vh;
+            width: 100%;
+            max-height: 80vh; /* Limit height and enable scrolling */
+            overflow-y: auto;
+        }
+        .jammer-panel {
+            border: 2px solid #555;
+            padding: 1.5vh 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5vh;
+        }
+        .jammer-panel h3 {
+            font-size: 2vmin;
+            margin: 0 0 1vh;
+            text-align: center;
+            color: #ccc;
+        }
+        .jammer-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            gap: 10px;
+        }
+        .jammer-row label {
+            font-size: 1.6vmin;
+        }
+        .jammer-row input, .jammer-row select {
+            width: 100%;
+            font-family: inherit;
+            background-color: #333;
+            color: white;
+            border: 2px solid #555;
+            padding: 0.5vh;
+            font-size: 1.6vmin;
+        }
+    </style>
 </head>
 <body>
     <div id="app-container">
@@ -241,6 +289,7 @@
             <button id="play-button" class="menu-button">Play</button>
             <button id="settings-button" class="menu-button">Settings</button>
             <button id="soundboard-button" class="menu-button">Soundboard</button>
+            <button id="tone-jammer-button" class="menu-button">Tone Jammer</button>
         </div>
 
         <!-- In-Game Screen -->
@@ -324,6 +373,11 @@
                         <label for="ghost-piece-checkbox">Ghost Piece</label>
                         <input type="checkbox" id="ghost-piece-checkbox" checked>
                     </div>
+                    <div class="setting-row">
+                        <label for="line-clear-animation-select">Line Clear Animation Style</label>
+                        <select id="line-clear-animation-select">
+                        </select>
+                    </div>
                     <div class="checkbox-row">
                         <label for="animated-line-clear-checkbox">Animated Line Clear</label>
                         <input type="checkbox" id="animated-line-clear-checkbox" checked>
@@ -353,6 +407,85 @@
             <button id="test-dream-celesta-synth" class="menu-button">Test Dream Celesta</button>
             <button id="test-toy-piano-synth" class="menu-button">Test Toy Piano</button>
             <button id="back-button-soundboard" class="menu-button">Back</button>
+        </div>
+
+        <!-- Tone Jammer Screen -->
+        <div id="tone-jammer-screen" class="hidden">
+            <h2>Tone Jammer</h2>
+            <div id="tone-jammer-controls">
+                <!-- Control Panel -->
+                <div class="jammer-panel">
+                    <h3>Controls</h3>
+                    <div class="jammer-row">
+                        <label for="jammer-load-preset">Load Preset</label>
+                        <select id="jammer-load-preset"></select>
+                    </div>
+                    <div class="jammer-row">
+                        <label for="jammer-live-preview">Live Preview</label>
+                        <input type="checkbox" id="jammer-live-preview">
+                    </div>
+                    <div class="jammer-row">
+                        <label for="jammer-preview-pitch">Preview Pitch</label>
+                        <input type="range" id="jammer-preview-pitch" min="24" max="96" value="60">
+                    </div>
+                    <button id="jammer-play" class="menu-button">Play</button>
+                    <button id="jammer-randomize-all" class="menu-button">Randomize All</button>
+                    <button id="jammer-copy" class="menu-button">Copy as New...</button>
+                    <button id="jammer-update" class="menu-button" disabled>Update in Code</button>
+
+                <!-- Metadata Panel -->
+                <div class="jammer-panel">
+                    <h3>Metadata</h3>
+                    <div class="jammer-row">
+                        <label for="jammer-id">ID</label>
+                        <input type="text" id="jammer-id" readonly>
+                    </div>
+                    <div class="jammer-row">
+                        <label for="jammer-gain">Gain</label>
+                        <input type="range" id="jammer-gain" min="0" max="1" step="0.01" value="0.5">
+                    </div>
+                    <div class="jammer-row">
+                        <label for="jammer-max-voices">Max Voices</label>
+                        <input type="number" id="jammer-max-voices" min="1" max="16" value="4">
+                    </div>
+                    <div class="jammer-row">
+                        <label for="jammer-reverb">Reverb</label>
+                        <input type="range" id="jammer-reverb" min="0" max="1" step="0.01" value="0">
+                    </div>
+                </div>
+
+                <!-- Synth Panel -->
+                <div class="jammer-panel">
+                    <h3>Synthesizer</h3>
+                    <div class="jammer-row">
+                        <label for="jammer-waveform">Waveform</label>
+                        <select id="jammer-waveform">
+                            <option value="sine">Sine</option>
+                            <option value="square">Square</option>
+                            <option value="sawtooth">Sawtooth</option>
+                            <option value="triangle">Triangle</option>
+                        </select>
+                    </div>
+                    <!-- Envelope Controls -->
+                    <div class="jammer-row">
+                        <label for="jammer-env-attack">Attack</label>
+                        <input type="range" id="jammer-env-attack" min="0.001" max="2" step="0.001" value="0.005">
+                    </div>
+                    <div class="jammer-row">
+                        <label for="jammer-env-decay">Decay</label>
+                        <input type="range" id="jammer-env-decay" min="0" max="2" step="0.001" value="0.1">
+                    </div>
+                    <div class="jammer-row">
+                        <label for="jammer-env-sustain">Sustain</label>
+                        <input type="range" id="jammer-env-sustain" min="0" max="1" step="0.01" value="0.3">
+                    </div>
+                    <div class="jammer-row">
+                        <label for="jammer-env-release">Release</label>
+                        <input type="range" id="jammer-env-release" min="0" max="5" step="0.01" value="1">
+                    </div>
+                </div>
+            </div>
+            <button id="back-button-tone-jammer" class="menu-button">Back</button>
         </div>
     </div>
 
