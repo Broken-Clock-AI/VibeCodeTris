@@ -6,6 +6,7 @@ import { GameEvent, Snapshot, GameStatus } from '../logic/types';
 import { UIStateManager, UIState, VisualSettings } from '../ui/state';
 import { AccessibilityManager } from '../ui/accessibility';
 import { AudioEngine } from '../audio/AudioEngine';
+import { AnimationManager } from './animations/AnimationManager';
 
 const BLOCK_SIZE = 30;
 const BORDER_WIDTH = 2;
@@ -33,18 +34,20 @@ const LINE_CLEAR_DELAY_TICKS = 28; // Must match engine value
 
 export class PixiRenderer {
     public app: PIXI.Application;
+    public boardBlocks: PIXI.Graphics[] = [];
+    public patternSprites: PIXI.Sprite[] = [];
     private boardContainer: PIXI.Container;
     private pieceOutlineContainer: PIXI.Graphics;
     private lineClearContainer: PIXI.Graphics;
-    private boardBlocks: PIXI.Graphics[] = [];
-    private patternSprites: PIXI.Sprite[] = [];
     private uiManager: UIStateManager;
     private accessibilityManager: AccessibilityManager;
     private audioEngine: AudioEngine; // Added AudioEngine
+    private animationManager: AnimationManager;
     private lastAnnouncedLevel: number = 1;
     private visualSettings: VisualSettings;
     private patternTextures: PIXI.Texture[] = [];
     private lastSnapshot: Snapshot | null = null;
+    private prevClearedLines: number[] | null = null;
 
     private constructor(uiManager: UIStateManager, accessibilityManager: AccessibilityManager, initialSettings: VisualSettings, audioEngine: AudioEngine) {
         this.app = new PIXI.Application();
@@ -55,6 +58,7 @@ export class PixiRenderer {
         this.accessibilityManager = accessibilityManager;
         this.visualSettings = initialSettings;
         this.audioEngine = audioEngine; // Assign AudioEngine
+        this.animationManager = new AnimationManager();
     }
 
     public static async create(
@@ -88,6 +92,10 @@ export class PixiRenderer {
     private onVisualSettingsChanged(settings: VisualSettings) {
         const shouldGenerateTextures = settings.distinctPatterns && this.patternTextures.length === 0;
         this.visualSettings = settings;
+        
+        if (settings.lineClearAnimation) {
+            this.animationManager.setAnimation(settings.lineClearAnimation);
+        }
         
         if (shouldGenerateTextures) {
             this.generatePatternTextures();
@@ -244,6 +252,7 @@ export class PixiRenderer {
         const strokeColor = highContrast ? 0xFFFFFF : 0x333333;
 
         block.clear();
+        block.alpha = 1; // Reset alpha before drawing
 
         switch (blockStyle) {
             case 'classic':
@@ -323,34 +332,35 @@ export class PixiRenderer {
             }
         }
 
-        // 2. If in LineClearAnimation state, apply the "center-out" hiding effect.
-        if (snapshot.status === GameStatus.LineClearAnimation && snapshot.clearedLines) {
-            const progress = 1 - (snapshot.lineClearDelay / LINE_CLEAR_DELAY_TICKS); // Progress from 0 to 1
-            const step = Math.floor(progress * (COLS / 2 + 1)); // Determine how many pairs of blocks to hide
+        // 2. Handle LineClearAnimation state using the AnimationManager.
+        const { isLineClearAnimationEnabled } = this.visualSettings;
+        const animation = this.animationManager.getActiveAnimation();
+        const currentClearedLines = snapshot.clearedLines;
 
-            for (const row of snapshot.clearedLines) {
-                for (let i = 0; i < COLS / 2; i++) {
-                    if (i < step) {
-                        // Calculate columns from the center outwards
-                        const leftCol = Math.floor(COLS / 2) - 1 - i;
-                        const rightCol = Math.ceil(COLS / 2) + i;
-
-                        // Hide the blocks
-                        const leftIndex = row * COLS + leftCol;
-                        if (leftIndex >= 0 && leftIndex < this.boardBlocks.length) {
-                            this.boardBlocks[leftIndex].visible = false;
-                            this.patternSprites[leftIndex].visible = false;
-                        }
-
-                        const rightIndex = row * COLS + rightCol;
-                        if (rightIndex >= 0 && rightIndex < this.boardBlocks.length) {
-                            this.boardBlocks[rightIndex].visible = false;
-                            this.patternSprites[rightIndex].visible = false;
-                        }
-                    }
+        if (isLineClearAnimationEnabled) {
+            // Check if we are starting a new animation
+            if (currentClearedLines && !this.prevClearedLines) {
+                if (animation.onStart) {
+                    animation.onStart(currentClearedLines, this);
                 }
             }
+
+            // Check if an animation has just ended
+            if (!currentClearedLines && this.prevClearedLines) {
+                if (animation.onEnd) {
+                    animation.onEnd(this.prevClearedLines, this);
+                }
+            }
+
+            // If in animation, run the animation frame
+            if (snapshot.status === GameStatus.LineClearAnimation && currentClearedLines) {
+                const progress = 1 - (snapshot.lineClearDelay / LINE_CLEAR_DELAY_TICKS);
+                animation.animate(progress, currentClearedLines, this);
+            }
         }
+        
+        this.prevClearedLines = currentClearedLines || null;
+
 
         // 3. Draw the current piece and ghost piece over the board state.
         if (snapshot.current) {
